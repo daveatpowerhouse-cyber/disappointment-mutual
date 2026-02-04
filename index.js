@@ -1,3 +1,4 @@
+// index.js
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
@@ -47,10 +48,8 @@ setInterval(() => {
 // ---------------- AUTH ----------------
 app.post('/api/register', (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password)
-    return res.status(400).json({ error: 'Missing fields' });
-  if (users[username])
-    return res.status(400).json({ error: 'User exists' });
+  if (!username || !password) return res.status(400).json({ error: 'Missing fields' });
+  if (users[username]) return res.status(400).json({ error: 'User exists' });
 
   users[username] = {
     password,
@@ -64,13 +63,12 @@ app.post('/api/register', (req, res) => {
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const user = users[username];
-  if (!user || user.password !== password)
-    return res.status(401).json({ error: 'Invalid credentials' });
+  if (!user || user.password !== password) return res.status(401).json({ error: 'Invalid credentials' });
 
   res.json({ success: true, user: { username, balance: user.balance } });
 });
 
-// ---------------- CORE EXCHANGE ----------------
+// ---------------- CORE EXCHANGE ENDPOINTS ----------------
 app.get('/api/balance', (req, res) => {
   const { username } = req.query;
   if (!users[username]) return res.json({ USDT: 0 });
@@ -78,7 +76,6 @@ app.get('/api/balance', (req, res) => {
 });
 
 app.get('/api/prices', (req, res) => res.json(prices));
-
 app.get('/api/orders', (req, res) => res.json({ orders }));
 
 app.get('/api/orderbook', (req, res) => {
