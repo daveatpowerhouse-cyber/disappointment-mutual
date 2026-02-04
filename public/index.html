@@ -1,138 +1,321 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Binance Clone</title>
-<style>
-  body { margin:0; font-family: Arial, sans-serif; background-color:#0b0b14; color:#fff; }
-  header { padding:10px 20px; background:#0d0d1a; display:flex; justify-content:space-between; align-items:center; }
-  header h1 { margin:0; font-size:1.5rem; }
-  main { display:flex; flex-wrap:wrap; padding:10px; }
-  #chart { flex:2 1 600px; height:400px; }
-  .sidebar { flex:1 1 300px; padding:10px; background:#121224; margin-left:10px; }
-  select, button { padding:5px 10px; margin:5px 0; }
-  table { width:100%; border-collapse:collapse; margin:10px 0; }
-  td, th { padding:4px; text-align:right; }
-  th { border-bottom:1px solid #555; }
-  .price-buy { color:#00a859; }
-  .price-sell { color:#f6465d; }
-  #balances div { margin:4px 0; }
-</style>
-<link rel="stylesheet" href="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mutual Exchange</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0b0b0b;
+            color: #fff;
+        }
+
+        header {
+            background: #141414;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+            color: #f0b90b;
+        }
+
+        header nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 15px;
+            font-size: 14px;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 50px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #141414;
+            padding: 20px;
+            border-right: 1px solid #333;
+            box-sizing: border-box;
+        }
+
+        .sidebar h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #f0b90b;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar li {
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .sidebar li:hover {
+            color: #f0b90b;
+        }
+
+        .main {
+            flex: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .login-form {
+            max-width: 300px;
+            margin: 0 auto;
+            background: #1c1c1c;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+
+        .login-form h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #f0b90b;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px 0;
+            border-radius: 3px;
+            border: 1px solid #555;
+            background: #0b0b0b;
+            color: #fff;
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 10px;
+            background: #f0b90b;
+            border: none;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .login-form button:hover {
+            background: #ddb100;
+        }
+
+        .prices {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .prices .crypto {
+            background: #1c1c1c;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            margin-bottom: 10px;
+            width: 120px;
+            text-align: center;
+        }
+
+        .order-book, .trade-history {
+            background: #1c1c1c;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .order-book table, .trade-history table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .order-book th, .order-book td,
+        .trade-history th, .trade-history td {
+            padding: 5px;
+            font-size: 12px;
+        }
+
+        .buy {
+            color: #00b07c;
+        }
+
+        .sell {
+            color: #ff4d4d;
+        }
+
+    </style>
 </head>
 <body>
+    <header>
+        <h1>Mutual Exchange</h1>
+        <nav>
+            <a href="#" id="loginLink">Login</a>
+            <a href="#" id="registerLink">Register</a>
+        </nav>
+    </header>
 
-<header>
-  <h1>My Binance Clone</h1>
-  <div>
-    <label for="pairSelect">Pair:</label>
-    <select id="pairSelect"></select>
-  </div>
-</header>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Markets</h2>
+            <ul id="marketList">
+                <!-- Market pairs will be added here dynamically -->
+            </ul>
+        </div>
 
-<main>
-  <div id="chart"></div>
+        <div class="main">
+            <div class="login-form" id="loginForm">
+                <h2>Login</h2>
+                <input type="text" id="username" placeholder="Username">
+                <input type="password" id="password" placeholder="Password">
+                <button id="loginBtn">Login</button>
+                <button id="registerBtn">Register</button>
+                <p id="loginError" style="color:red;"></p>
+            </div>
 
-  <div class="sidebar">
-    <h2>Order Book</h2>
-    <table>
-      <thead><tr><th>Price</th><th>Amount</th></tr></thead>
-      <tbody id="orderbookBody"></tbody>
-    </table>
+            <div id="dashboard" style="display:none;">
+                <h2>Dashboard</h2>
+                <div class="prices" id="pricesContainer">
+                    <!-- Crypto prices dynamically added -->
+                </div>
 
-    <h2>Recent Trades</h2>
-    <table>
-      <thead><tr><th>Price</th><th>Amount</th></tr></thead>
-      <tbody id="tradesBody"></tbody>
-    </table>
+                <div style="display:flex; gap:10px; height:400px;">
+                    <div class="order-book" id="orderBook">
+                        <h3>Order Book</h3>
+                        <table id="orderBookTable">
+                            <thead>
+                                <tr>
+                                    <th>Price</th>
+                                    <th>Amount</th>
+                                    <th>Side</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
 
-    <h2>Balances</h2>
-    <div id="balances"></div>
+                    <div class="trade-history" id="tradeHistory">
+                        <h3>Recent Trades</h3>
+                        <table id="tradeTable">
+                            <thead>
+                                <tr>
+                                    <th>Price</th>
+                                    <th>Amount</th>
+                                    <th>Side</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-    <div>
-      <button id="buyBtn">Buy</button>
-      <button id="sellBtn">Sell</button>
+        </div>
     </div>
-  </div>
-</main>
 
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-<script>
-// ---------------- CHART ----------------
-const chartDiv = document.getElementById('chart');
-const chart = LightweightCharts.createChart(chartDiv, { 
-  width: chartDiv.clientWidth, 
-  height: chartDiv.clientHeight, 
-  layout: { backgroundColor: '#0b0b14', textColor: '#fff' }, 
-  grid: { vertLines: { color: '#1f1f2a' }, horzLines: { color: '#1f1f2a' } }, 
-  crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
-});
-const candleSeries = chart.addCandlestickSeries({ upColor: '#00a859', downColor: '#f6465d', borderVisible: false, wickUpColor: '#00a859', wickDownColor: '#f6465d' });
+    <script>
+        const apiBase = '/api';
+        let currentUser = null;
 
-// ---------------- PAIRS ----------------
-const topPairs = ["BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","ADAUSDT","XRPUSDT","DOGEUSDT","DOTUSDT","AVAXUSDT","LTCUSDT"];
-const pairSelect = document.getElementById('pairSelect');
-pairSelect.innerHTML = topPairs.map(p => `<option value="${p}">${p.slice(0,-4)}/${p.slice(-4)}</option>`).join('');
-let currentPair = pairSelect.value;
-pairSelect.addEventListener('change', () => { currentPair = pairSelect.value; refreshOrderBook(prices); refreshTrades(prices); });
+        async function fetchPrices() {
+            const res = await fetch(apiBase + '/prices');
+            const data = await res.json();
+            const container = document.getElementById('pricesContainer');
+            container.innerHTML = '';
+            for (const [pair, price] of Object.entries(data)) {
+                const div = document.createElement('div');
+                div.className = 'crypto';
+                div.innerHTML = `<strong>${pair}</strong><br>${price.toFixed(2)}`;
+                container.appendChild(div);
+            }
+        }
 
-// ---------------- ORDERBOOK/TRADES ----------------
-const orderbookBody = document.getElementById('orderbookBody');
-const tradesBody = document.getElementById('tradesBody');
-function refreshOrderBook(pricesData) {
-  orderbookBody.innerHTML = '';
-  for(let i=0;i<10;i++){
-    const price = (pricesData[currentPair] * (1 + (Math.random()-0.5)/50)).toFixed(2);
-    const amount = (Math.random()*2).toFixed(3);
-    orderbookBody.innerHTML += `<tr><td class="${i%2===0?'price-buy':'price-sell'}">${price}</td><td>${amount}</td></tr>`;
-  }
-}
-function refreshTrades(pricesData) {
-  tradesBody.innerHTML = '';
-  for(let i=0;i<10;i++){
-    const price = (pricesData[currentPair] * (1 + (Math.random()-0.5)/50)).toFixed(2);
-    const amount = (Math.random()*2).toFixed(3);
-    tradesBody.innerHTML += `<tr><td class="${i%2===0?'price-buy':'price-sell'}">${price}</td><td>${amount}</td></tr>`;
-  }
-}
+        async function fetchOrderBook() {
+            const res = await fetch(apiBase + '/orderbook?pair=BTCUSDT');
+            const data = await res.json();
+            const tbody = document.querySelector('#orderBookTable tbody');
+            tbody.innerHTML = '';
+            data.bids.forEach(o => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${o.price}</td><td>${o.amount}</td><td class="buy">Buy</td>`;
+                tbody.appendChild(tr);
+            });
+            data.asks.forEach(o => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${o.price}</td><td>${o.amount}</td><td class="sell">Sell</td>`;
+                tbody.appendChild(tr);
+            });
+        }
 
-// ---------------- BALANCES ----------------
-const balancesDiv = document.getElementById('balances');
-const balances = { USDT: 1000, BTC: 0.5, ETH: 1.2, SOL: 10 };
-function refreshBalances() {
-  balancesDiv.innerHTML = '';
-  for(const key in balances){
-    balancesDiv.innerHTML += `<div>${key}: ${balances[key]}</div>`;
-  }
-}
-refreshBalances();
+        async function fetchTrades() {
+            const res = await fetch(apiBase + '/trades');
+            const data = await res.json();
+            const tbody = document.querySelector('#tradeTable tbody');
+            tbody.innerHTML = '';
+            data.trades.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${t.price}</td><td>${t.amount}</td><td class="${t.side}">${t.side}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
 
-// ---------------- FETCH PRICES ----------------
-let prices = {};
-async function fetchPrices() {
-  try {
-    const res = await fetch('/api/prices');
-    prices = await res.json();
-    refreshOrderBook(prices);
-    refreshTrades(prices);
-    
-    // Update chart with demo candlestick
-    const lastPrice = prices[currentPair];
-    const now = Math.floor(Date.now()/1000);
-    candleSeries.update({ time: now, open: lastPrice*0.995, high: lastPrice*1.005, low: lastPrice*0.995, close: lastPrice });
-  } catch(err) { console.error(err); }
-}
-fetchPrices();
-setInterval(fetchPrices, 1500);
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const res = await fetch(apiBase + '/login', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({username,password})
+            });
+            const data = await res.json();
+            if(data.success){
+                currentUser = data.user;
+                document.getElementById('loginForm').style.display='none';
+                document.getElementById('dashboard').style.display='block';
+                fetchPrices();
+                fetchOrderBook();
+                fetchTrades();
+                setInterval(fetchPrices,1500);
+                setInterval(fetchOrderBook,1500);
+                setInterval(fetchTrades,1500);
+            } else {
+                document.getElementById('loginError').innerText = data.error;
+            }
+        });
 
-// ---------------- BUY/SELL ----------------
-document.getElementById('buyBtn').addEventListener('click', ()=>alert('Buy clicked'));
-document.getElementById('sellBtn').addEventListener('click', ()=>alert('Sell clicked'));
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const res = await fetch(apiBase + '/register', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({username,password})
+            });
+            const data = await res.json();
+            if(data.success){
+                alert('Registration successful! You can now login.');
+            } else {
+                document.getElementById('loginError').innerText = data.error;
+            }
+        });
 
-// ---------------- RESIZE ----------------
-window.addEventListener('resize', ()=>chart.applyOptions({ width: chartDiv.clientWidth, height: chartDiv.clientHeight }));
-</script>
-
+    </script>
 </body>
 </html>
