@@ -916,595 +916,386 @@
   </div>
 
   <script>
-    // ==================== STATE ====================
-    let currentUser = null;
-    let currentPair = 'BTCUSDT';
-    let currentSide = 'buy';
-    let authMode = 'login';
-    let prices = {};
-    let priceHistory = {};
-    let chartContext = null;
-    let lastPrices = {};
+  // ==================== CONFIG ====================
+  const API_BASE = window.location.hostname.includes('localhost') 
+      ? 'http://localhost:3000' // local dev backend
+      : ''; // deployed backend on same host as frontend
 
-    // ==================== INITIALIZATION ====================
-    init();
+  // ==================== STATE ====================
+  let currentUser = null;
+  let currentPair = 'BTCUSDT';
+  let currentSide = 'buy';
+  let authMode = 'login';
+  let prices = {};
+  let priceHistory = {};
+  let lastPrices = {};
 
-    function init() {
-      console.log('🚀 Initializing Exchange...');
-      setupChart();
+  // ==================== INITIALIZATION ====================
+  init();
+
+  function init() {
+    console.log('🚀 Initializing Exchange...');
+    setupChart();
+    fetchPrices();
+    fetchOrderbook();
+    fetchTrades();
+    
+    // Poll data
+    setInterval(() => {
       fetchPrices();
       fetchOrderbook();
       fetchTrades();
-      
-      // Poll data every 1.5 seconds
-      setInterval(() => {
-        fetchPrices();
-        fetchOrderbook();
-        fetchTrades();
-      }, 1500);
+    }, 1500);
 
-      // Update chart every 3 seconds
-      setInterval(updateChart, 3000);
+    // Update chart
+    setInterval(updateChart, 3000);
 
-      // Calculate total on input change
-      document.getElementById('orderPrice').addEventListener('input', calculateTotal);
-      document.getElementById('orderAmount').addEventListener('input', calculateTotal);
+    // Calculate total on input change
+    document.getElementById('orderPrice').addEventListener('input', calculateTotal);
+    document.getElementById('orderAmount').addEventListener('input', calculateTotal);
+  }
+
+  // ==================== AUTH ====================
+  function showAuthModal() {
+    document.getElementById('authModal').classList.add('active');
+    document.getElementById('authUsername').focus();
+  }
+
+  function hideAuthModal() {
+    document.getElementById('authModal').classList.remove('active');
+    document.getElementById('authForm').reset();
+    document.getElementById('authError').classList.remove('active');
+    document.getElementById('authSuccess').classList.remove('active');
+  }
+
+  function handleModalClick(event) {
+    if (event.target.id === 'authModal') hideAuthModal();
+  }
+
+  function switchAuthTab(mode) {
+    authMode = mode;
+    document.getElementById('loginTab').classList.toggle('active', mode === 'login');
+    document.getElementById('registerTab').classList.toggle('active', mode === 'register');
+    document.getElementById('authButtonText').textContent = mode === 'login' ? 'Login' : 'Create Account';
+    document.getElementById('authError').classList.remove('active');
+    document.getElementById('authSuccess').classList.remove('active');
+  }
+
+  async function handleAuth(e) {
+    e.preventDefault();
+    const username = document.getElementById('authUsername').value.trim();
+    const password = document.getElementById('authPassword').value;
+
+    if (!username || !password) {
+      showError('Please fill in all fields');
+      return;
     }
 
-    // ==================== AUTH ====================
-    function showAuthModal() {
-      document.getElementById('authModal').classList.add('active');
-      document.getElementById('authUsername').focus();
-    }
+    const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span>';
 
-    function hideAuthModal() {
-      document.getElementById('authModal').classList.remove('active');
-      document.getElementById('authForm').reset();
-      document.getElementById('authError').classList.remove('active');
-      document.getElementById('authSuccess').classList.remove('active');
-    }
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-    function handleModalClick(event) {
-      if (event.target.id === 'authModal') {
-        hideAuthModal();
-      }
-    }
+      const data = await res.json();
 
-    function switchAuthTab(mode) {
-      authMode = mode;
-      document.getElementById('loginTab').classList.toggle('active', mode === 'login');
-      document.getElementById('registerTab').classList.toggle('active', mode === 'register');
-      document.getElementById('authButtonText').textContent = mode === 'login' ? 'Login' : 'Create Account';
-      document.getElementById('authError').classList.remove('active');
-      document.getElementById('authSuccess').classList.remove('active');
-    }
-
-    async function handleAuth(e) {
-      e.preventDefault();
-      const username = document.getElementById('authUsername').value.trim();
-      const password = document.getElementById('authPassword').value;
-      
-      if (!username || !password) {
-        showError('Please fill in all fields');
-        return;
-      }
-      
-      const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
-      const btn = e.target.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="loading-spinner"></span>';
-      
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        
-        const data = await res.json();
-        
-        if (!res.ok) {
-          showError(data.error || 'Authentication failed');
-          btn.disabled = false;
-          btn.innerHTML = `<span>${authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
-          return;
-        }
-        
-        currentUser = data.user;
-        console.log('✅ Authentication successful:', currentUser.username);
-        showSuccess(authMode === 'login' ? 'Welcome back!' : 'Account created successfully!');
-        
-        setTimeout(() => {
-          hideAuthModal();
-          updateUserSection();
-          fetchBalance();
-          btn.disabled = false;
-          btn.innerHTML = `<span>${authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
-        }, 1000);
-        
-      } catch (err) {
-        console.error('Auth error:', err);
-        showError('Connection error. Please try again.');
+      if (!res.ok) {
+        showError(data.error || 'Authentication failed');
         btn.disabled = false;
         btn.innerHTML = `<span>${authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
-      }
-    }
-
-    function showError(msg) {
-      const el = document.getElementById('authError');
-      el.textContent = msg;
-      el.classList.add('active');
-      setTimeout(() => el.classList.remove('active'), 4000);
-    }
-
-    function showSuccess(msg) {
-      const el = document.getElementById('authSuccess');
-      el.textContent = msg;
-      el.classList.add('active');
-    }
-
-    function logout() {
-      currentUser = null;
-      console.log('👋 Logged out');
-      updateUserSection();
-    }
-
-    function updateUserSection() {
-      const section = document.getElementById('userSection');
-      if (currentUser) {
-        section.innerHTML = `
-          <div class="balance-display">
-            <div class="balance-label">Total Balance</div>
-            <div class="balance-value" id="userBalance">Loading...</div>
-          </div>
-          <button class="btn btn-secondary" onclick="logout()">Logout</button>
-        `;
-      } else {
-        section.innerHTML = `
-          <button class="btn btn-primary" onclick="showAuthModal()">Login / Register</button>
-        `;
-      }
-    }
-
-    async function fetchBalance() {
-      if (!currentUser) return;
-      
-      try {
-        const res = await fetch(`/api/balance?username=${encodeURIComponent(currentUser.username)}`);
-        const balance = await res.json();
-        currentUser.balance = balance;
-        
-        const usdtBalance = (balance.USDT || 0).toFixed(2);
-        const balanceEl = document.getElementById('userBalance');
-        if (balanceEl) {
-          balanceEl.textContent = `${usdtBalance} USDT`;
-        }
-        
-        updateAvailableBalance();
-      } catch (err) {
-        console.error('Failed to fetch balance:', err);
-      }
-    }
-
-    function updateAvailableBalance() {
-      if (!currentUser) {
-        document.getElementById('availableBalance').textContent = '0.00 USDT';
         return;
       }
-      
-      const crypto = currentPair.replace('USDT', '');
-      if (currentSide === 'buy') {
-        const available = (currentUser.balance.USDT || 0).toFixed(2);
-        document.getElementById('availableBalance').textContent = `${available} USDT`;
-      } else {
-        const available = (currentUser.balance[crypto] || 0).toFixed(6);
-        document.getElementById('availableBalance').textContent = `${available} ${crypto}`;
-      }
-    }
 
-    // ==================== PRICES ====================
-    async function fetchPrices() {
-      try {
-        const res = await fetch('/api/prices');
-        const newPrices = await res.json();
-        
-        // Track price changes
-        Object.keys(newPrices).forEach(pair => {
-          if (lastPrices[pair]) {
-            const change = newPrices[pair] - lastPrices[pair];
-            newPrices[pair + '_change'] = change;
-          }
-        });
-        
-        lastPrices = { ...newPrices };
-        prices = newPrices;
-        
-        updateTicker();
-        updateCurrentPrice();
-        
-        // Update price history for chart
-        Object.keys(prices).forEach(pair => {
-          if (!pair.includes('_change')) {
-            if (!priceHistory[pair]) priceHistory[pair] = [];
-            priceHistory[pair].push(prices[pair]);
-            if (priceHistory[pair].length > 100) priceHistory[pair].shift();
-          }
-        });
-        
-      } catch (err) {
-        console.error('Failed to fetch prices:', err);
-      }
-    }
+      currentUser = data.user;
+      showSuccess(authMode === 'login' ? 'Welcome back!' : 'Account created successfully!');
 
-    function updateTicker() {
-      const tickerBar = document.getElementById('tickerBar');
-      const pairs = Object.keys(prices).filter(p => !p.includes('_change'));
-      
-      if (!pairs.length) {
-        tickerBar.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div>Loading market data...</div>';
-        return;
-      }
-      
-      tickerBar.innerHTML = pairs.map(pair => {
-        const price = prices[pair];
-        const crypto = pair.replace('USDT', '');
-        const isActive = pair === currentPair ? 'active' : '';
-        const change = prices[pair + '_change'] || 0;
-        const changeClass = change >= 0 ? 'up' : 'down';
-        const changeText = change >= 0 ? `+${(change).toFixed(2)}` : `${(change).toFixed(2)}`;
-        
-        return `
-          <div class="ticker-item ${isActive}" onclick="selectPair('${pair}')">
-            <div class="ticker-header">
-              <span class="ticker-symbol">${crypto}/USDT</span>
-              <span class="ticker-badge">SPOT</span>
-            </div>
-            <div class="ticker-price ${changeClass}">${price.toFixed(2)}</div>
-            <div class="ticker-change ${changeClass}">${changeText}</div>
-          </div>
-        `;
-      }).join('');
-    }
+      setTimeout(() => {
+        hideAuthModal();
+        updateUserSection();
+        fetchBalance();
+        btn.disabled = false;
+        btn.innerHTML = `<span>${authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
+      }, 1000);
 
-    function updateCurrentPrice() {
-      const price = prices[currentPair];
-      if (price) {
-        const el = document.getElementById('currentPrice');
-        const change = prices[currentPair + '_change'] || 0;
-        const changeClass = change >= 0 ? 'up' : 'down';
-        el.textContent = price.toFixed(2);
-        el.className = `current-price ${changeClass}`;
-      }
+    } catch (err) {
+      console.error('Auth error:', err);
+      showError('Connection error. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = `<span>${authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
     }
+  }
 
-    function selectPair(pair) {
-      currentPair = pair;
-      console.log('📌 Selected pair:', pair);
+  function showError(msg) {
+    const el = document.getElementById('authError');
+    el.textContent = msg;
+    el.classList.add('active');
+    setTimeout(() => el.classList.remove('active'), 4000);
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('authSuccess');
+    el.textContent = msg;
+    el.classList.add('active');
+  }
+
+  function logout() {
+    currentUser = null;
+    updateUserSection();
+  }
+
+  function updateUserSection() {
+    const section = document.getElementById('userSection');
+    if (currentUser) {
+      section.innerHTML = `
+        <div class="balance-display">
+          <div class="balance-label">Total Balance</div>
+          <div class="balance-value" id="userBalance">Loading...</div>
+        </div>
+        <button class="btn btn-secondary" onclick="logout()">Logout</button>
+      `;
+    } else {
+      section.innerHTML = `<button class="btn btn-primary" onclick="showAuthModal()">Login / Register</button>`;
+    }
+  }
+
+  async function fetchBalance() {
+    if (!currentUser) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/balance?username=${encodeURIComponent(currentUser.username)}`);
+      const balance = await res.json();
+      currentUser.balance = balance;
+      document.getElementById('userBalance').textContent = (balance.USDT || 0).toFixed(2) + ' USDT';
+      updateAvailableBalance();
+    } catch (err) {
+      console.error('Failed to fetch balance:', err);
+    }
+  }
+
+  function updateAvailableBalance() {
+    if (!currentUser) return document.getElementById('availableBalance').textContent = '0.00 USDT';
+    const crypto = currentPair.replace('USDT', '');
+    const available = currentSide === 'buy' ? (currentUser.balance.USDT || 0).toFixed(2) : (currentUser.balance[crypto] || 0).toFixed(6);
+    document.getElementById('availableBalance').textContent = currentSide === 'buy' ? `${available} USDT` : `${available} ${crypto}`;
+  }
+
+  // ==================== PRICES ====================
+  async function fetchPrices() {
+    try {
+      const res = await fetch(`${API_BASE}/api/prices`);
+      const newPrices = await res.json();
+
+      Object.keys(newPrices).forEach(pair => {
+        if (lastPrices[pair]) newPrices[pair + '_change'] = newPrices[pair] - lastPrices[pair];
+      });
+
+      lastPrices = { ...newPrices };
+      prices = newPrices;
       updateTicker();
       updateCurrentPrice();
-      fetchOrderbook();
-      fetchTrades();
-      
+
+      Object.keys(prices).forEach(pair => {
+        if (!pair.includes('_change')) {
+          if (!priceHistory[pair]) priceHistory[pair] = [];
+          priceHistory[pair].push(prices[pair]);
+          if (priceHistory[pair].length > 100) priceHistory[pair].shift();
+        }
+      });
+    } catch (err) {
+      console.error('Failed to fetch prices:', err);
+    }
+  }
+
+  function updateTicker() {
+    const tickerBar = document.getElementById('tickerBar');
+    const pairs = Object.keys(prices).filter(p => !p.includes('_change'));
+    if (!pairs.length) return tickerBar.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div>Loading market data...</div>';
+    tickerBar.innerHTML = pairs.map(pair => {
+      const price = prices[pair];
       const crypto = pair.replace('USDT', '');
-      document.getElementById('chartTitle').textContent = `${crypto}/USDT`;
-      document.getElementById('tradeCrypto').textContent = crypto;
-      document.getElementById('amountSuffix').textContent = crypto;
-      
-      const currentPrice = prices[pair];
-      if (currentPrice) {
-        document.getElementById('orderPrice').value = currentPrice.toFixed(2);
-      }
-      
-      if (currentUser) {
-        updateAvailableBalance();
-      }
-      
-      calculateTotal();
-    }
+      const isActive = pair === currentPair ? 'active' : '';
+      const change = prices[pair + '_change'] || 0;
+      const changeClass = change >= 0 ? 'up' : 'down';
+      const changeText = change >= 0 ? `+${change.toFixed(2)}` : `${change.toFixed(2)}`;
+      return `
+        <div class="ticker-item ${isActive}" onclick="selectPair('${pair}')">
+          <div class="ticker-header">
+            <span class="ticker-symbol">${crypto}/USDT</span>
+            <span class="ticker-badge">SPOT</span>
+          </div>
+          <div class="ticker-price ${changeClass}">${price.toFixed(2)}</div>
+          <div class="ticker-change ${changeClass}">${changeText}</div>
+        </div>
+      `;
+    }).join('');
+  }
 
-    // ==================== ORDERBOOK ====================
-    async function fetchOrderbook() {
-      try {
-        const res = await fetch(`/api/orderbook?pair=${currentPair}`);
-        const data = await res.json();
-        
-        renderOrderbook('orderbookAsks', data.asks.slice(0, 12), 'ask');
-        renderOrderbook('orderbookBids', data.bids.slice(0, 12), 'bid');
-      } catch (err) {
-        console.error('Failed to fetch orderbook:', err);
-      }
-    }
+  function updateCurrentPrice() {
+    const price = prices[currentPair];
+    if (!price) return;
+    const el = document.getElementById('currentPrice');
+    const change = prices[currentPair + '_change'] || 0;
+    el.textContent = price.toFixed(2);
+    el.className = `current-price ${change >= 0 ? 'up' : 'down'}`;
+  }
 
-    function renderOrderbook(elementId, orders, type) {
-      const el = document.getElementById(elementId);
-      
-      if (!orders.length) {
-        el.innerHTML = '<div class="empty-state" style="padding: 20px;"><div class="empty-state-icon">📝</div>No orders</div>';
-        return;
-      }
-      
-      const maxTotal = Math.max(...orders.map(o => o.price * o.amount), 1);
-      
-      el.innerHTML = orders.map(order => {
-        const total = order.price * order.amount;
-        const percentage = (total / maxTotal) * 100;
-        const priceClass = type === 'bid' ? 'up' : 'down';
-        
+  function selectPair(pair) {
+    currentPair = pair;
+    updateTicker();
+    updateCurrentPrice();
+    fetchOrderbook();
+    fetchTrades();
+
+    const crypto = pair.replace('USDT', '');
+    document.getElementById('chartTitle').textContent = `${crypto}/USDT`;
+    document.getElementById('tradeCrypto').textContent = crypto;
+    document.getElementById('amountSuffix').textContent = crypto;
+
+    const currentPrice = prices[pair];
+    if (currentPrice) document.getElementById('orderPrice').value = currentPrice.toFixed(2);
+    if (currentUser) updateAvailableBalance();
+    calculateTotal();
+  }
+
+  // ==================== ORDERBOOK ====================
+  async function fetchOrderbook() {
+    try {
+      const res = await fetch(`${API_BASE}/api/orderbook?pair=${currentPair}`);
+      const data = await res.json();
+      renderOrderbook('orderbookAsks', data.asks.slice(0, 12), 'ask');
+      renderOrderbook('orderbookBids', data.bids.slice(0, 12), 'bid');
+    } catch (err) {
+      console.error('Failed to fetch orderbook:', err);
+    }
+  }
+
+  function renderOrderbook(elementId, orders, type) {
+    const el = document.getElementById(elementId);
+    if (!orders.length) return el.innerHTML = '<div class="empty-state" style="padding: 20px;"><div class="empty-state-icon">📝</div>No orders</div>';
+
+    const maxTotal = Math.max(...orders.map(o => o.price * o.amount), 1);
+
+    el.innerHTML = orders.map(order => {
+      const total = order.price * order.amount;
+      const percentage = (total / maxTotal) * 100;
+      const priceClass = type === 'bid' ? 'up' : 'down';
+      return `
+        <div class="orderbook-row" onclick="fillPrice(${order.price})">
+          <div class="orderbook-bg ${type}" style="width: ${percentage}%"></div>
+          <div class="${priceClass}">${order.price.toFixed(2)}</div>
+          <div>${order.amount.toFixed(6)}</div>
+          <div>${total.toFixed(2)}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function fillPrice(price) {
+    document.getElementById('orderPrice').value = price.toFixed(2);
+    calculateTotal();
+  }
+
+  // ==================== TRADES ====================
+  async function fetchTrades() {
+    try {
+      const res = await fetch(`${API_BASE}/api/trades`);
+      const data = await res.json();
+      const filtered = data.trades.filter(t => t.pair === currentPair).slice(-25).reverse();
+      const el = document.getElementById('recentTrades');
+      if (!filtered.length) return el.innerHTML = '<div class="empty-state" style="padding: 20px;"><div class="empty-state-icon">💱</div>No trades yet</div>';
+      el.innerHTML = filtered.map(trade => {
+        const time = new Date(trade.time).toLocaleTimeString('en-US', { hour12: false });
+        const priceClass = trade.side === 'buy' ? 'up' : 'down';
         return `
-          <div class="orderbook-row" onclick="fillPrice(${order.price})">
-            <div class="orderbook-bg ${type}" style="width: ${percentage}%"></div>
-            <div class="${priceClass}">${order.price.toFixed(2)}</div>
-            <div>${order.amount.toFixed(6)}</div>
-            <div>${total.toFixed(2)}</div>
+          <div class="orderbook-row">
+            <div class="${priceClass}">${trade.price.toFixed(2)}</div>
+            <div>${trade.amount.toFixed(6)}</div>
+            <div style="font-size: 11px; color: #848e9c;">${time}</div>
           </div>
         `;
       }).join('');
+    } catch (err) {
+      console.error('Failed to fetch trades:', err);
     }
+  }
 
-    function fillPrice(price) {
-      document.getElementById('orderPrice').value = price.toFixed(2);
-      calculateTotal();
+  // ==================== ORDER TOTAL ====================
+  function calculateTotal() {
+    const price = parseFloat(document.getElementById('orderPrice').value) || 0;
+    const amount = parseFloat(document.getElementById('orderAmount').value) || 0;
+    document.getElementById('orderTotal').value = (price * amount).toFixed(2);
+  }
+
+  function setPercentage(percent) {
+    if (!currentUser) return;
+    const crypto = currentPair.replace('USDT', '');
+    if (currentSide === 'buy') {
+      const totalUSDT = currentUser.balance.USDT || 0;
+      const price = parseFloat(document.getElementById('orderPrice').value) || 1;
+      document.getElementById('orderAmount').value = ((totalUSDT * percent / 100) / price).toFixed(6);
+    } else {
+      const amount = currentUser.balance[crypto] || 0;
+      document.getElementById('orderAmount').value = (amount * percent / 100).toFixed(6);
     }
+    calculateTotal();
+  }
 
-    // ==================== TRADES ====================
-    async function fetchTrades() {
-      try {
-        const res = await fetch('/api/trades');
-        const data = await res.json();
-        
-        const filtered = data.trades.filter(t => t.pair === currentPair).slice(-25).reverse();
-        
-        const el = document.getElementById('recentTrades');
-        if (!filtered.length) {
-          el.innerHTML = '<div class="empty-state" style="padding: 20px;"><div class="empty-state-icon">💱</div>No trades yet</div>';
-          return;
-        }
-        
-        el.innerHTML = filtered.map(trade => {
-          const time = new Date(trade.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-          const priceClass = trade.side === 'buy' ? 'up' : 'down';
-          
-          return `
-            <div class="orderbook-row">
-              <div class="${priceClass}">${trade.price.toFixed(2)}</div>
-              <div>${trade.amount.toFixed(6)}</div>
-              <div style="font-size: 11px; color: #848e9c;">${time}</div>
-            </div>
-          `;
-        }).join('');
-      } catch (err) {
-        console.error('Failed to fetch trades:', err);
-      }
-    }
+  function switchTab(side) {
+    currentSide = side;
+    document.getElementById('buyTab').classList.toggle('active', side === 'buy');
+    document.getElementById('sellTab').classList.toggle('active', side === 'sell');
+    updateAvailableBalance();
+  }
 
-    // ==================== TRADING ====================
-    function switchTab(side) {
-      currentSide = side;
-      document.getElementById('buyTab').classList.toggle('active', side === 'buy');
-      document.getElementById('sellTab').classList.toggle('active', side === 'sell');
-      
-      const btn = document.getElementById('submitBtn');
-      const crypto = currentPair.replace('USDT', '');
-      
-      if (side === 'buy') {
-        btn.className = 'btn btn-buy';
-        btn.innerHTML = `Buy ${crypto}`;
-      } else {
-        btn.className = 'btn btn-sell';
-        btn.innerHTML = `Sell ${crypto}`;
-      }
-      
-      if (currentUser) {
-        updateAvailableBalance();
-      }
-      
-      calculateTotal();
-    }
+  async function placeOrder() {
+    if (!currentUser) return alert('Please login first');
+    const price = parseFloat(document.getElementById('orderPrice').value);
+    const amount = parseFloat(document.getElementById('orderAmount').value);
+    if (!price || !amount) return alert('Price and amount must be greater than 0');
 
-    function calculateTotal() {
-      const price = parseFloat(document.getElementById('orderPrice').value) || 0;
-      const amount = parseFloat(document.getElementById('orderAmount').value) || 0;
-      const total = price * amount;
-      document.getElementById('orderTotal').value = total.toFixed(2);
-    }
-
-    function setPercentage(pct) {
-      if (!currentUser) {
-        showAuthModal();
-        return;
-      }
-      
-      const price = parseFloat(document.getElementById('orderPrice').value) || prices[currentPair];
-      if (!price) return;
-      
-      const crypto = currentPair.replace('USDT', '');
-      
-      let amount = 0;
-      if (currentSide === 'buy') {
-        const available = currentUser.balance.USDT || 0;
-        amount = (available * pct / 100) / price;
-      } else {
-        const available = currentUser.balance[crypto] || 0;
-        amount = available * pct / 100;
-      }
-      
-      document.getElementById('orderAmount').value = amount.toFixed(6);
-      calculateTotal();
-    }
-
-    async function placeOrder() {
-      if (!currentUser) {
-        showAuthModal();
-        return;
-      }
-      
-      const price = parseFloat(document.getElementById('orderPrice').value);
-      const amount = parseFloat(document.getElementById('orderAmount').value);
-      
-      if (!price || !amount || price <= 0 || amount <= 0) {
-        alert('⚠️ Please enter valid price and amount');
-        return;
-      }
-      
-      const btn = document.getElementById('submitBtn');
-      const originalHTML = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = '<span class="loading-spinner"></span> Placing Order...';
-      
-      try {
-        const res = await fetch('/api/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: currentUser.username,
-            pair: currentPair,
-            side: currentSide,
-            price,
-            amount
-          })
-        });
-        
-        const data = await res.json();
-        
-        if (!res.ok) {
-          alert('❌ ' + (data.error || 'Order failed'));
-          btn.disabled = false;
-          btn.innerHTML = originalHTML;
-          return;
-        }
-        
-        console.log('✅ Order placed:', data.order);
-        alert(`✅ Order placed successfully!\n${currentSide.toUpperCase()} ${amount} ${currentPair.replace('USDT', '')} @ ${price} USDT`);
-        
-        // Clear form
-        document.getElementById('orderAmount').value = '';
-        document.getElementById('orderTotal').value = '';
-        
-        // Refresh data
-        fetchBalance();
-        fetchOrderbook();
-        fetchTrades();
-        
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
-        
-      } catch (err) {
-        console.error('Order error:', err);
-        alert('❌ Failed to place order. Please try again.');
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
-      }
-    }
-
-    // ==================== CHART ====================
-    function setupChart() {
-      const canvas = document.getElementById('priceChart');
-      chartContext = canvas.getContext('2d');
-      
-      const container = canvas.parentElement;
-      canvas.width = container.clientWidth - 48;
-      canvas.height = container.clientHeight - 48;
-    }
-
-    function updateChart() {
-      if (!chartContext || !priceHistory[currentPair]) return;
-      
-      const canvas = chartContext.canvas;
-      const ctx = chartContext;
-      const data = priceHistory[currentPair] || [];
-      
-      if (data.length < 2) return;
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      const padding = 50;
-      const chartWidth = canvas.width - padding * 2;
-      const chartHeight = canvas.height - padding * 2;
-      
-      const minPrice = Math.min(...data);
-      const maxPrice = Math.max(...data);
-      const priceRange = maxPrice - minPrice || 1;
-      
-      // Grid
-      ctx.strokeStyle = '#2b3139';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([5, 5]);
-      
-      for (let i = 0; i <= 5; i++) {
-        const y = padding + (chartHeight / 5) * i;
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(canvas.width - padding, y);
-        ctx.stroke();
-        
-        const price = maxPrice - (priceRange / 5) * i;
-        ctx.fillStyle = '#848e9c';
-        ctx.font = '12px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(price.toFixed(2), padding - 10, y + 4);
-      }
-      
-      ctx.setLineDash([]);
-      
-      // Line
-      ctx.strokeStyle = '#0ecb81';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      
-      data.forEach((price, i) => {
-        const x = padding + (chartWidth / (data.length - 1)) * i;
-        const y = padding + chartHeight - ((price - minPrice) / priceRange) * chartHeight;
-        
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
+    try {
+      const res = await fetch(`${API_BASE}/api/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: currentUser.username, pair: currentPair, side: currentSide, price, amount })
       });
-      
-      ctx.stroke();
-      
-      // Area
-      ctx.lineTo(canvas.width - padding, canvas.height - padding);
-      ctx.lineTo(padding, canvas.height - padding);
-      ctx.closePath();
-      
-      const gradient = ctx.createLinearGradient(0, padding, 0, canvas.height - padding);
-      gradient.addColorStop(0, 'rgba(14, 203, 129, 0.2)');
-      gradient.addColorStop(1, 'rgba(14, 203, 129, 0)');
-      ctx.fillStyle = gradient;
-      ctx.fill();
-      
-      // Current price indicator
-      const currentPrice = data[data.length - 1];
-      const currentY = padding + chartHeight - ((currentPrice - minPrice) / priceRange) * chartHeight;
-      
-      ctx.fillStyle = '#0ecb81';
-      ctx.beginPath();
-      ctx.arc(canvas.width - padding, currentY, 5, 0, Math.PI * 2);
-      ctx.fill();
-      
-      ctx.fillStyle = '#0ecb81';
-      ctx.fillRect(canvas.width - padding + 10, currentY - 12, 80, 24);
-      ctx.fillStyle = '#000';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(currentPrice.toFixed(2), canvas.width - padding + 50, currentY + 4);
+      const data = await res.json();
+      if (!res.ok) return alert(data.error || 'Order failed');
+      fetchBalance();
+      fetchOrderbook();
+      fetchTrades();
+      document.getElementById('orderAmount').value = '';
+      calculateTotal();
+      alert('Order placed successfully!');
+    } catch (err) {
+      console.error('Order error:', err);
+      alert('Order failed. Please try again.');
     }
+  }
 
-    window.addEventListener('resize', () => {
-      setupChart();
-      updateChart();
+  // ==================== CHART ====================
+  function setupChart() {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    chartContext = new Chart(ctx, {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: currentPair, data: [], borderColor: '#f0b90b', backgroundColor: 'rgba(240,185,11,0.2)' }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, scales: { x: { display: false }, y: { ticks: { color: '#eaecef' } } } }
     });
+  }
 
-    // ==================== KEYBOARD SHORTCUTS ====================
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.getElementById('authModal').classList.contains('active')) {
-        hideAuthModal();
-      }
-    });
+  function updateChart() {
+    if (!chartContext) return;
+    const history = priceHistory[currentPair] || [];
+    chartContext.data.labels = history.map((_, i) => i);
+    chartContext.data.datasets[0].data = history;
+    chartContext.update();
+  }
+</script>
 
-    console.log('✅ Exchange initialized successfully!');
-  </script>
 </body>
 </html>
