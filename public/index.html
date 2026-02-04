@@ -1,199 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Disappointment Mutual Exchange</title>
-  <style>
-    /* ---------------- GLOBAL ---------------- */
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
-    body { background: #0b0b0b; color: #fff; }
-    a { color: inherit; text-decoration: none; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Johnny Exchange</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  /* Global Styles */
+  body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: #0b0b14; color: #fff; }
+  * { box-sizing: border-box; }
+  a { color: inherit; text-decoration: none; }
 
-    /* ---------------- HEADER ---------------- */
-    header { display: flex; justify-content: space-between; padding: 10px 20px; background: #0f0f0f; border-bottom: 1px solid #222; }
-    header h1 { font-size: 20px; color: #f0b90b; }
-    .balances { display: flex; gap: 15px; align-items: center; }
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #0b0b14; border-bottom: 1px solid #1f1f2a; position: sticky; top: 0; z-index: 100; }
+  .logo { font-weight: 700; font-size: 1.5rem; color: #f0b90b; }
+  .pair-select { background: #1f1f2a; border: none; color: #fff; padding: 5px 10px; border-radius: 4px; }
+  .tabs button { margin-left: 10px; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; background: #1f1f2a; color: #fff; }
+  .tabs button.active { background: #2a2a40; }
 
-    /* ---------------- MAIN LAYOUT ---------------- */
-    .container { display: flex; height: calc(100vh - 50px); }
-    .sidebar { width: 200px; background: #111; padding: 15px; border-right: 1px solid #222; overflow-y: auto; }
-    .main { flex: 1; display: flex; flex-direction: column; }
+  /* Layout */
+  .container { display: grid; grid-template-columns: 1fr 300px; grid-template-rows: auto 1fr; gap: 10px; padding: 10px; height: calc(100vh - 60px); }
+  .left-panel { display: grid; grid-template-rows: 400px 1fr; gap: 10px; }
+  .chart-container { background: #0b0b14; border: 1px solid #1f1f2a; }
+  .orderbook, .trades, .balance-panel { background: #0b0b14; border: 1px solid #1f1f2a; padding: 10px; overflow-y: auto; font-size: 0.85rem; }
+  .right-panel { display: flex; flex-direction: column; gap: 10px; }
+  .order-form { background: #0b0b14; border: 1px solid #1f1f2a; padding: 10px; border-radius: 4px; }
+  .order-form h3 { margin-top: 0; }
+  .order-form input, .order-form select, .order-form button { width: 100%; padding: 5px; margin-bottom: 5px; border-radius: 4px; border: none; }
 
-    /* ---------------- PAIR SELECT & CHART ---------------- */
-    .pair-selector { background: #0f0f0f; padding: 10px; border-bottom: 1px solid #222; display: flex; gap: 10px; }
-    select { background: #111; color: #fff; border: 1px solid #333; padding: 5px; }
+  .buy-btn { background: #00a859; color: #fff; }
+  .sell-btn { background: #f6465d; color: #fff; }
 
-    #chart { flex: 1; background: #0b0b0b; margin: 10px; border: 1px solid #222; }
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 4px 6px; text-align: right; }
+  th { color: #aaa; border-bottom: 1px solid #1f1f2a; font-weight: 500; }
+  .price-buy { color: #00a859; }
+  .price-sell { color: #f6465d; }
 
-    /* ---------------- ORDERBOOK/TRADES ---------------- */
-    .market-info { display: flex; gap: 10px; margin: 10px; flex: 1; }
-    .orderbook, .trades { flex: 1; background: #111; border: 1px solid #222; overflow-y: auto; padding: 10px; }
-    .orderbook h2, .trades h2 { font-size: 14px; margin-bottom: 5px; color: #f0b90b; }
+  /* Scrollbars */
+  .orderbook::-webkit-scrollbar, .trades::-webkit-scrollbar, .balance-panel::-webkit-scrollbar { width: 6px; }
+  .orderbook::-webkit-scrollbar-thumb, .trades::-webkit-scrollbar-thumb, .balance-panel::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
-    table { width: 100%; font-size: 12px; border-collapse: collapse; }
-    th, td { padding: 3px; text-align: right; }
-    th { color: #aaa; border-bottom: 1px solid #222; }
-    .buy { color: #00b894; }
-    .sell { color: #d63031; }
-
-    /* ---------------- ORDER FORM ---------------- */
-    .order-form { display: flex; gap: 10px; margin: 10px; }
-    .order-form div { flex: 1; display: flex; flex-direction: column; }
-    .order-form input, .order-form button { padding: 5px; margin-top: 5px; border: 1px solid #333; background: #111; color: #fff; }
-    .order-form button.buy { background: #00b894; border: none; cursor: pointer; }
-    .order-form button.sell { background: #d63031; border: none; cursor: pointer; }
-
-  </style>
+  /* Responsive */
+  @media (max-width: 1000px) { .container { grid-template-columns: 1fr; grid-template-rows: auto; } .right-panel { flex-direction: row; overflow-x: auto; } }
+</style>
 </head>
 <body>
-
-<header>
-  <h1>DME Exchange</h1>
-  <div class="balances">
-    <span>USDT: <b id="bal-usdt">0</b></span>
-    <span>BTC: <b id="bal-btc">0</b></span>
-    <span>ETH: <b id="bal-eth">0</b></span>
-  </div>
-</header>
-
-<div class="container">
-  <div class="sidebar">
-    <h2>Wallet</h2>
-    <ul id="wallet-list"></ul>
-  </div>
-
-  <div class="main">
-    <div class="pair-selector">
-      <label>Pair:
-        <select id="pair-select">
-          <option value="BTCUSDT">BTC/USDT</option>
-          <option value="ETHUSDT">ETH/USDT</option>
-          <option value="SOLUSDT">SOL/USDT</option>
-          <option value="BNBUSDT">BNB/USDT</option>
-          <option value="ADAUSDT">ADA/USDT</option>
-        </select>
-      </label>
-      <span>Price: <b id="current-price">0</b></span>
-    </div>
-
-    <div id="chart">[Chart Placeholder]</div>
-
-    <div class="market-info">
-      <div class="orderbook">
-        <h2>Order Book</h2>
-        <table>
-          <thead><tr><th>Price</th><th>Amount</th></tr></thead>
-          <tbody id="bids"></tbody>
-          <tbody id="asks"></tbody>
-        </table>
-      </div>
-
-      <div class="trades">
-        <h2>Recent Trades</h2>
-        <table>
-          <thead><tr><th>Price</th><th>Amount</th></tr></thead>
-          <tbody id="trades"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="order-form">
-      <div>
-        <label>Buy Price</label>
-        <input type="number" id="buy-price">
-        <label>Amount</label>
-        <input type="number" id="buy-amount">
-        <button class="buy" id="buy-btn">Buy</button>
-      </div>
-      <div>
-        <label>Sell Price</label>
-        <input type="number" id="sell-price">
-        <label>Amount</label>
-        <input type="number" id="sell-amount">
-        <button class="sell" id="sell-btn">Sell</button>
+  <div class="header">
+    <div class="logo">JohnnyEx</div>
+    <div>
+      <select class="pair-select" id="pairSelect">
+        <option value="BTCUSDT">BTC/USDT</option>
+        <option value="ETHUSDT">ETH/USDT</option>
+        <option value="SOLUSDT">SOL/USDT</option>
+      </select>
+      <div class="tabs">
+        <button class="active" id="spotBtn">Spot</button>
+        <button id="futuresBtn">Futures</button>
       </div>
     </div>
   </div>
-</div>
+
+  <div class="container">
+    <div class="left-panel">
+      <div class="chart-container" id="chart"></div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="orderbook" id="orderbook">
+          <h4>Order Book</h4>
+          <table><thead><tr><th>Price</th><th>Amount</th></tr></thead><tbody id="orderbookBody"></tbody></table>
+        </div>
+        <div class="trades" id="trades">
+          <h4>Recent Trades</h4>
+          <table><thead><tr><th>Price</th><th>Amount</th></tr></thead><tbody id="tradesBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="order-form">
+        <h3>Buy</h3>
+        <input type="number" id="buyPrice" placeholder="Price">
+        <input type="number" id="buyAmount" placeholder="Amount">
+        <button class="buy-btn" id="buyBtn">Buy</button>
+      </div>
+      <div class="order-form">
+        <h3>Sell</h3>
+        <input type="number" id="sellPrice" placeholder="Price">
+        <input type="number" id="sellAmount" placeholder="Amount">
+        <button class="sell-btn" id="sellBtn">Sell</button>
+      </div>
+      <div class="balance-panel" id="balancePanel">
+        <h4>Balances</h4>
+        <div id="balances"></div>
+      </div>
+    </div>
+  </div>
 
 <script>
-  let currentPair = 'BTCUSDT';
+  // ---------------- DATA ----------------
+  const prices = { BTCUSDT: 43000, ETHUSDT: 2300, SOLUSDT: 98 };
+  const orders = [];
+  const trades = [];
 
-  async function fetchBalance() {
-    const res = await fetch('/api/balance?username=test');
-    const bal = await res.json();
-    document.getElementById('bal-usdt').textContent = bal.USDT.toFixed(2);
-    document.getElementById('bal-btc').textContent = bal.BTC.toFixed(6);
-    document.getElementById('bal-eth').textContent = bal.ETH.toFixed(6);
-    // Sidebar list
-    const walletList = document.getElementById('wallet-list');
-    walletList.innerHTML = '';
-    for (let k in bal) {
-      const li = document.createElement('li');
-      li.textContent = `${k}: ${bal[k].toFixed(6)}`;
-      walletList.appendChild(li);
+  const pairSelect = document.getElementById('pairSelect');
+  let currentPair = pairSelect.value;
+
+  pairSelect.addEventListener('change', () => {
+    currentPair = pairSelect.value;
+    refreshOrderBook();
+    refreshTrades();
+  });
+
+  // ---------------- LIGHTWEIGHT CHART ----------------
+  const chartDiv = document.getElementById('chart');
+  const chart = LightweightCharts.createChart(chartDiv, { 
+    width: chartDiv.clientWidth, 
+    height: chartDiv.clientHeight, 
+    layout: { backgroundColor: '#0b0b14', textColor: '#fff' }, 
+    grid: { vertLines: { color: '#1f1f2a' }, horzLines: { color: '#1f1f2a' } }, 
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+  });
+  const candleSeries = chart.addCandlestickSeries({ upColor: '#00a859', downColor: '#f6465d', borderVisible: false, wickUpColor: '#00a859', wickDownColor: '#f6465d' });
+
+  function randomCandles(count = 50) {
+    const data = [];
+    let lastClose = 43000;
+    for(let i=0;i<count;i++){
+      const open = lastClose + (Math.random()-0.5)*200;
+      const close = open + (Math.random()-0.5)*200;
+      const high = Math.max(open, close) + Math.random()*100;
+      const low = Math.min(open, close) - Math.random()*100;
+      data.push({ time: Date.now()/1000 - (count-i)*60, open, high, low, close });
+      lastClose = close;
+    }
+    return data;
+  }
+  candleSeries.setData(randomCandles());
+
+  // ---------------- ORDER BOOK ----------------
+  const orderbookBody = document.getElementById('orderbookBody');
+  const tradesBody = document.getElementById('tradesBody');
+
+  function refreshOrderBook() {
+    orderbookBody.innerHTML = '';
+    for(let i=0;i<10;i++){
+      const price = (prices[currentPair] * (1 + (Math.random()-0.5)/50)).toFixed(2);
+      const amount = (Math.random()*2).toFixed(3);
+      const row = `<tr><td class="${i%2===0?'price-buy':'price-sell'}">${price}</td><td>${amount}</td></tr>`;
+      orderbookBody.innerHTML += row;
     }
   }
-
-  async function fetchPrice() {
-    const res = await fetch('/api/prices');
-    const prices = await res.json();
-    document.getElementById('current-price').textContent = prices[currentPair].toFixed(2);
+  function refreshTrades() {
+    tradesBody.innerHTML = '';
+    for(let i=0;i<10;i++){
+      const price = (prices[currentPair] * (1 + (Math.random()-0.5)/50)).toFixed(2);
+      const amount = (Math.random()*2).toFixed(3);
+      const row = `<tr><td class="${i%2===0?'price-buy':'price-sell'}">${price}</td><td>${amount}</td></tr>`;
+      tradesBody.innerHTML += row;
+    }
   }
+  refreshOrderBook();
+  refreshTrades();
 
-  async function fetchOrderBook() {
-    const res = await fetch(`/api/orderbook?pair=${currentPair}`);
-    const data = await res.json();
-    const bidsEl = document.getElementById('bids');
-    const asksEl = document.getElementById('asks');
-    bidsEl.innerHTML = '';
-    asksEl.innerHTML = '';
-    data.bids.slice(-10).reverse().forEach(o => bidsEl.innerHTML += `<tr><td class="buy">${o.price}</td><td>${o.amount}</td></tr>`);
-    data.asks.slice(0,10).forEach(o => asksEl.innerHTML += `<tr><td class="sell">${o.price}</td><td>${o.amount}</td></tr>`);
+  // ---------------- BALANCES ----------------
+  const balancesDiv = document.getElementById('balances');
+  const balances = { USDT: 1000, BTC: 0.5, ETH: 1.2, SOL: 10 };
+  function refreshBalances() {
+    balancesDiv.innerHTML = '';
+    for(const key in balances){
+      balancesDiv.innerHTML += `<div>${key}: ${balances[key]}</div>`;
+    }
   }
+  refreshBalances();
 
-  async function fetchTrades() {
-    const res = await fetch('/api/trades');
-    const data = await res.json();
-    const tradesEl = document.getElementById('trades');
-    tradesEl.innerHTML = '';
-    data.trades.slice(-10).reverse().forEach(t => tradesEl.innerHTML += `<tr><td>${t.price}</td><td>${t.amount}</td></tr>`);
-  }
+  // ---------------- BUY/SELL ----------------
+  document.getElementById('buyBtn').addEventListener('click', ()=>alert('Buy clicked'));
+  document.getElementById('sellBtn').addEventListener('click', ()=>alert('Sell clicked'));
 
-  document.getElementById('pair-select').addEventListener('change', e => { currentPair = e.target.value; });
-
-  document.getElementById('buy-btn').addEventListener('click', async () => {
-    const price = parseFloat(document.getElementById('buy-price').value);
-    const amount = parseFloat(document.getElementById('buy-amount').value);
-    await fetch('/api/orders', {
-      method: 'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({username:'test', pair: currentPair, side:'buy', price, amount})
-    });
-    fetchBalance(); fetchOrderBook(); fetchTrades();
-  });
-
-  document.getElementById('sell-btn').addEventListener('click', async () => {
-    const price = parseFloat(document.getElementById('sell-price').value);
-    const amount = parseFloat(document.getElementById('sell-amount').value);
-    await fetch('/api/orders', {
-      method: 'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({username:'test', pair: currentPair, side:'sell', price, amount})
-    });
-    fetchBalance(); fetchOrderBook(); fetchTrades();
-  });
-
-  function refresh() {
-    fetchBalance();
-    fetchPrice();
-    fetchOrderBook();
-    fetchTrades();
-  }
-
-  setInterval(refresh, 1500);
-  refresh();
+  // ---------------- RESIZE ----------------
+  window.addEventListener('resize', ()=>chart.applyOptions({ width: chartDiv.clientWidth, height: chartDiv.clientHeight }));
 </script>
-
 </body>
 </html>
