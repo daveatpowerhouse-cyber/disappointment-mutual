@@ -1,10 +1,15 @@
 // index.js
 import express from 'express';
-import path from 'path';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
+import path, { dirname, join } from 'path';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ---------------- ES MODULE __dirname FIX ----------------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // ---------------- MIDDLEWARE ----------------
 app.use(cors());
@@ -12,15 +17,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ---------------- STATIC FRONTEND ----------------
-// Use __dirname to avoid path issues
-app.use(express.static(path.resolve(__dirname, 'public')));
+app.use(express.static(join(__dirname, 'public')));
 
 // ---------------- IN-MEMORY DATA ----------------
 const users = {};
 const orders = [];
 const trades = [];
 
-// Fake live prices (for chart/UI)
+// Fake live prices (what your chart + UI need)
 let prices = {
   BTCUSDT: 43000,
   ETHUSDT: 2300,
@@ -44,27 +48,30 @@ setInterval(() => {
 // ---------------- AUTH ----------------
 app.post('/api/register', (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'Missing fields' });
-  if (users[username]) return res.status(400).json({ error: 'User exists' });
+  if (!username || !password)
+    return res.status(400).json({ error: 'Missing fields' });
+  if (users[username])
+    return res.status(400).json({ error: 'User exists' });
 
   users[username] = {
     password,
     balance: { USDT: 1000, BTC: 0, ETH: 0, SOL: 0, BNB: 0, ADA: 0, XRP: 0, DOGE: 0, DOT: 0 },
     orders: []
   };
-
   res.json({ success: true, user: { username, balance: users[username].balance } });
 });
 
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const user = users[username];
-  if (!user || user.password !== password) return res.status(401).json({ error: 'Invalid credentials' });
-
+  if (!user || user.password !== password) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
   res.json({ success: true, user: { username, balance: user.balance } });
 });
 
 // ---------------- CORE EXCHANGE ENDPOINTS ----------------
+
 // Balance
 app.get('/api/balance', (req, res) => {
   const { username } = req.query;
@@ -72,7 +79,7 @@ app.get('/api/balance', (req, res) => {
   res.json(users[username].balance);
 });
 
-// Prices
+// Prices (THIS FIXES YOUR CHART)
 app.get('/api/prices', (req, res) => {
   res.json(prices);
 });
@@ -82,7 +89,7 @@ app.get('/api/orders', (req, res) => {
   res.json({ orders });
 });
 
-// Order book
+// Order book (THIS FIXES ORDER BOOK)
 app.get('/api/orderbook', (req, res) => {
   const { pair } = req.query;
   const bids = orders
@@ -91,11 +98,10 @@ app.get('/api/orderbook', (req, res) => {
   const asks = orders
     .filter(o => o.pair === pair && o.side === 'sell' && o.status === 'open')
     .sort((a, b) => a.price - b.price);
-
   res.json({ bids, asks });
 });
 
-// Recent trades
+// Trades (THIS FIXES RECENT TRADES)
 app.get('/api/trades', (req, res) => {
   res.json({ trades: trades.slice(-50) });
 });
@@ -125,10 +131,10 @@ app.post('/api/orders', (req, res) => {
 
 // ---------------- SPA FALLBACK ----------------
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+  res.sendFile(join(__dirname, 'public', 'index.html'));
 });
 
-// ---------------- START SERVER ----------------
+// ---------------- START ----------------
 app.listen(PORT, () => {
   console.log(`🚀 Exchange running on port ${PORT}`);
 });
