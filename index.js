@@ -5,14 +5,18 @@ import path from 'path';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve all files in the 'public' folder
+// Serve static files from the 'public' folder
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-// For single-page app routing (optional, useful if you have multiple pages or JS routing)
+// Always send index.html for any route (SPA support)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'), (err) => {
+    if (err) {
+      res.status(500).send(err);
+    }
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
