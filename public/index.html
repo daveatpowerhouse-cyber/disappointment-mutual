@@ -3,184 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Johnny Exchange</title>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<title>My Binance Clone</title>
 <style>
-  /* Global Styles */
-  body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: #0b0b14; color: #fff; }
-  * { box-sizing: border-box; }
-  a { color: inherit; text-decoration: none; }
-
-  /* Header */
-  .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #0b0b14; border-bottom: 1px solid #1f1f2a; position: sticky; top: 0; z-index: 100; }
-  .logo { font-weight: 700; font-size: 1.5rem; color: #f0b90b; }
-  .pair-select { background: #1f1f2a; border: none; color: #fff; padding: 5px 10px; border-radius: 4px; }
-  .tabs button { margin-left: 10px; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; background: #1f1f2a; color: #fff; }
-  .tabs button.active { background: #2a2a40; }
-
-  /* Layout */
-  .container { display: grid; grid-template-columns: 1fr 300px; grid-template-rows: auto 1fr; gap: 10px; padding: 10px; height: calc(100vh - 60px); }
-  .left-panel { display: grid; grid-template-rows: 400px 1fr; gap: 10px; }
-  .chart-container { background: #0b0b14; border: 1px solid #1f1f2a; }
-  .orderbook, .trades, .balance-panel { background: #0b0b14; border: 1px solid #1f1f2a; padding: 10px; overflow-y: auto; font-size: 0.85rem; }
-  .right-panel { display: flex; flex-direction: column; gap: 10px; }
-  .order-form { background: #0b0b14; border: 1px solid #1f1f2a; padding: 10px; border-radius: 4px; }
-  .order-form h3 { margin-top: 0; }
-  .order-form input, .order-form select, .order-form button { width: 100%; padding: 5px; margin-bottom: 5px; border-radius: 4px; border: none; }
-
-  .buy-btn { background: #00a859; color: #fff; }
-  .sell-btn { background: #f6465d; color: #fff; }
-
-  /* Tables */
-  table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 4px 6px; text-align: right; }
-  th { color: #aaa; border-bottom: 1px solid #1f1f2a; font-weight: 500; }
-  .price-buy { color: #00a859; }
-  .price-sell { color: #f6465d; }
-
-  /* Scrollbars */
-  .orderbook::-webkit-scrollbar, .trades::-webkit-scrollbar, .balance-panel::-webkit-scrollbar { width: 6px; }
-  .orderbook::-webkit-scrollbar-thumb, .trades::-webkit-scrollbar-thumb, .balance-panel::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-
-  /* Responsive */
-  @media (max-width: 1000px) { .container { grid-template-columns: 1fr; grid-template-rows: auto; } .right-panel { flex-direction: row; overflow-x: auto; } }
+  body { margin:0; font-family: Arial, sans-serif; background-color:#0b0b14; color:#fff; }
+  header { padding:10px 20px; background:#0d0d1a; display:flex; justify-content:space-between; align-items:center; }
+  header h1 { margin:0; font-size:1.5rem; }
+  main { display:flex; flex-wrap:wrap; padding:10px; }
+  #chart { flex:2 1 600px; height:400px; }
+  .sidebar { flex:1 1 300px; padding:10px; background:#121224; margin-left:10px; }
+  select, button { padding:5px 10px; margin:5px 0; }
+  table { width:100%; border-collapse:collapse; margin:10px 0; }
+  td, th { padding:4px; text-align:right; }
+  th { border-bottom:1px solid #555; }
+  .price-buy { color:#00a859; }
+  .price-sell { color:#f6465d; }
+  #balances div { margin:4px 0; }
 </style>
+<link rel="stylesheet" href="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
 </head>
 <body>
-  <div class="header">
-    <div class="logo">JohnnyEx</div>
+
+<header>
+  <h1>My Binance Clone</h1>
+  <div>
+    <label for="pairSelect">Pair:</label>
+    <select id="pairSelect"></select>
+  </div>
+</header>
+
+<main>
+  <div id="chart"></div>
+
+  <div class="sidebar">
+    <h2>Order Book</h2>
+    <table>
+      <thead><tr><th>Price</th><th>Amount</th></tr></thead>
+      <tbody id="orderbookBody"></tbody>
+    </table>
+
+    <h2>Recent Trades</h2>
+    <table>
+      <thead><tr><th>Price</th><th>Amount</th></tr></thead>
+      <tbody id="tradesBody"></tbody>
+    </table>
+
+    <h2>Balances</h2>
+    <div id="balances"></div>
+
     <div>
-      <select class="pair-select" id="pairSelect">
-        <option value="BTCUSDT">BTC/USDT</option>
-        <option value="ETHUSDT">ETH/USDT</option>
-        <option value="SOLUSDT">SOL/USDT</option>
-      </select>
-      <div class="tabs">
-        <button class="active" id="spotBtn">Spot</button>
-        <button id="futuresBtn">Futures</button>
-      </div>
+      <button id="buyBtn">Buy</button>
+      <button id="sellBtn">Sell</button>
     </div>
   </div>
+</main>
 
-  <div class="container">
-    <div class="left-panel">
-      <div class="chart-container" id="chart"></div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div class="orderbook" id="orderbook">
-          <h4>Order Book</h4>
-          <table><thead><tr><th>Price</th><th>Amount</th></tr></thead><tbody id="orderbookBody"></tbody></table>
-        </div>
-        <div class="trades" id="trades">
-          <h4>Recent Trades</h4>
-          <table><thead><tr><th>Price</th><th>Amount</th></tr></thead><tbody id="tradesBody"></tbody></table>
-        </div>
-      </div>
-    </div>
-
-    <div class="right-panel">
-      <div class="order-form">
-        <h3>Buy</h3>
-        <input type="number" id="buyPrice" placeholder="Price">
-        <input type="number" id="buyAmount" placeholder="Amount">
-        <button class="buy-btn" id="buyBtn">Buy</button>
-      </div>
-      <div class="order-form">
-        <h3>Sell</h3>
-        <input type="number" id="sellPrice" placeholder="Price">
-        <input type="number" id="sellAmount" placeholder="Amount">
-        <button class="sell-btn" id="sellBtn">Sell</button>
-      </div>
-      <div class="balance-panel" id="balancePanel">
-        <h4>Balances</h4>
-        <div id="balances"></div>
-      </div>
-    </div>
-  </div>
-
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 <script>
-  // ---------------- DATA ----------------
-  const prices = { BTCUSDT: 43000, ETHUSDT: 2300, SOLUSDT: 98 };
-  const orders = [];
-  const trades = [];
+// ---------------- CHART ----------------
+const chartDiv = document.getElementById('chart');
+const chart = LightweightCharts.createChart(chartDiv, { 
+  width: chartDiv.clientWidth, 
+  height: chartDiv.clientHeight, 
+  layout: { backgroundColor: '#0b0b14', textColor: '#fff' }, 
+  grid: { vertLines: { color: '#1f1f2a' }, horzLines: { color: '#1f1f2a' } }, 
+  crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+});
+const candleSeries = chart.addCandlestickSeries({ upColor: '#00a859', downColor: '#f6465d', borderVisible: false, wickUpColor: '#00a859', wickDownColor: '#f6465d' });
 
-  const pairSelect = document.getElementById('pairSelect');
-  let currentPair = pairSelect.value;
+// ---------------- PAIRS ----------------
+const topPairs = ["BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","ADAUSDT","XRPUSDT","DOGEUSDT","DOTUSDT","AVAXUSDT","LTCUSDT"];
+const pairSelect = document.getElementById('pairSelect');
+pairSelect.innerHTML = topPairs.map(p => `<option value="${p}">${p.slice(0,-4)}/${p.slice(-4)}</option>`).join('');
+let currentPair = pairSelect.value;
+pairSelect.addEventListener('change', () => { currentPair = pairSelect.value; refreshOrderBook(prices); refreshTrades(prices); });
 
-  pairSelect.addEventListener('change', () => {
-    currentPair = pairSelect.value;
-    refreshOrderBook();
-    refreshTrades();
-  });
-
-  // ---------------- LIGHTWEIGHT CHART ----------------
-  const chartDiv = document.getElementById('chart');
-  const chart = LightweightCharts.createChart(chartDiv, { 
-    width: chartDiv.clientWidth, 
-    height: chartDiv.clientHeight, 
-    layout: { backgroundColor: '#0b0b14', textColor: '#fff' }, 
-    grid: { vertLines: { color: '#1f1f2a' }, horzLines: { color: '#1f1f2a' } }, 
-    crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
-  });
-  const candleSeries = chart.addCandlestickSeries({ upColor: '#00a859', downColor: '#f6465d', borderVisible: false, wickUpColor: '#00a859', wickDownColor: '#f6465d' });
-
-  function randomCandles(count = 50) {
-    const data = [];
-    let lastClose = 43000;
-    for(let i=0;i<count;i++){
-      const open = lastClose + (Math.random()-0.5)*200;
-      const close = open + (Math.random()-0.5)*200;
-      const high = Math.max(open, close) + Math.random()*100;
-      const low = Math.min(open, close) - Math.random()*100;
-      data.push({ time: Date.now()/1000 - (count-i)*60, open, high, low, close });
-      lastClose = close;
-    }
-    return data;
+// ---------------- ORDERBOOK/TRADES ----------------
+const orderbookBody = document.getElementById('orderbookBody');
+const tradesBody = document.getElementById('tradesBody');
+function refreshOrderBook(pricesData) {
+  orderbookBody.innerHTML = '';
+  for(let i=0;i<10;i++){
+    const price = (pricesData[currentPair] * (1 + (Math.random()-0.5)/50)).toFixed(2);
+    const amount = (Math.random()*2).toFixed(3);
+    orderbookBody.innerHTML += `<tr><td class="${i%2===0?'price-buy':'price-sell'}">${price}</td><td>${amount}</td></tr>`;
   }
-  candleSeries.setData(randomCandles());
-
-  // ---------------- ORDER BOOK ----------------
-  const orderbookBody = document.getElementById('orderbookBody');
-  const tradesBody = document.getElementById('tradesBody');
-
-  function refreshOrderBook() {
-    orderbookBody.innerHTML = '';
-    for(let i=0;i<10;i++){
-      const price = (prices[currentPair] * (1 + (Math.random()-0.5)/50)).toFixed(2);
-      const amount = (Math.random()*2).toFixed(3);
-      const row = `<tr><td class="${i%2===0?'price-buy':'price-sell'}">${price}</td><td>${amount}</td></tr>`;
-      orderbookBody.innerHTML += row;
-    }
+}
+function refreshTrades(pricesData) {
+  tradesBody.innerHTML = '';
+  for(let i=0;i<10;i++){
+    const price = (pricesData[currentPair] * (1 + (Math.random()-0.5)/50)).toFixed(2);
+    const amount = (Math.random()*2).toFixed(3);
+    tradesBody.innerHTML += `<tr><td class="${i%2===0?'price-buy':'price-sell'}">${price}</td><td>${amount}</td></tr>`;
   }
-  function refreshTrades() {
-    tradesBody.innerHTML = '';
-    for(let i=0;i<10;i++){
-      const price = (prices[currentPair] * (1 + (Math.random()-0.5)/50)).toFixed(2);
-      const amount = (Math.random()*2).toFixed(3);
-      const row = `<tr><td class="${i%2===0?'price-buy':'price-sell'}">${price}</td><td>${amount}</td></tr>`;
-      tradesBody.innerHTML += row;
-    }
+}
+
+// ---------------- BALANCES ----------------
+const balancesDiv = document.getElementById('balances');
+const balances = { USDT: 1000, BTC: 0.5, ETH: 1.2, SOL: 10 };
+function refreshBalances() {
+  balancesDiv.innerHTML = '';
+  for(const key in balances){
+    balancesDiv.innerHTML += `<div>${key}: ${balances[key]}</div>`;
   }
-  refreshOrderBook();
-  refreshTrades();
+}
+refreshBalances();
 
-  // ---------------- BALANCES ----------------
-  const balancesDiv = document.getElementById('balances');
-  const balances = { USDT: 1000, BTC: 0.5, ETH: 1.2, SOL: 10 };
-  function refreshBalances() {
-    balancesDiv.innerHTML = '';
-    for(const key in balances){
-      balancesDiv.innerHTML += `<div>${key}: ${balances[key]}</div>`;
-    }
-  }
-  refreshBalances();
+// ---------------- FETCH PRICES ----------------
+let prices = {};
+async function fetchPrices() {
+  try {
+    const res = await fetch('/api/prices');
+    prices = await res.json();
+    refreshOrderBook(prices);
+    refreshTrades(prices);
+    
+    // Update chart with demo candlestick
+    const lastPrice = prices[currentPair];
+    const now = Math.floor(Date.now()/1000);
+    candleSeries.update({ time: now, open: lastPrice*0.995, high: lastPrice*1.005, low: lastPrice*0.995, close: lastPrice });
+  } catch(err) { console.error(err); }
+}
+fetchPrices();
+setInterval(fetchPrices, 1500);
 
-  // ---------------- BUY/SELL ----------------
-  document.getElementById('buyBtn').addEventListener('click', ()=>alert('Buy clicked'));
-  document.getElementById('sellBtn').addEventListener('click', ()=>alert('Sell clicked'));
+// ---------------- BUY/SELL ----------------
+document.getElementById('buyBtn').addEventListener('click', ()=>alert('Buy clicked'));
+document.getElementById('sellBtn').addEventListener('click', ()=>alert('Sell clicked'));
 
-  // ---------------- RESIZE ----------------
-  window.addEventListener('resize', ()=>chart.applyOptions({ width: chartDiv.clientWidth, height: chartDiv.clientHeight }));
+// ---------------- RESIZE ----------------
+window.addEventListener('resize', ()=>chart.applyOptions({ width: chartDiv.clientWidth, height: chartDiv.clientHeight }));
 </script>
+
 </body>
 </html>
