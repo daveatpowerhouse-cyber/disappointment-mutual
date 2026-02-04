@@ -2,213 +2,198 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mutual Exchange</title>
+  <title>Disappointment Mutual Exchange</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f2f2f2; }
-    header { background: #333; color: #fff; padding: 1rem; text-align: center; }
-    main { padding: 1rem; }
-    input, button, select { padding: 0.5rem; margin: 0.25rem; }
-    #loginForm, #registerForm, #exchange { margin-bottom: 2rem; }
-    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: center; }
-    #prices { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
-    .price-card { background: #fff; padding: 0.5rem 1rem; border-radius: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    /* ---------------- GLOBAL ---------------- */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
+    body { background: #0b0b0b; color: #fff; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ---------------- HEADER ---------------- */
+    header { display: flex; justify-content: space-between; padding: 10px 20px; background: #0f0f0f; border-bottom: 1px solid #222; }
+    header h1 { font-size: 20px; color: #f0b90b; }
+    .balances { display: flex; gap: 15px; align-items: center; }
+
+    /* ---------------- MAIN LAYOUT ---------------- */
+    .container { display: flex; height: calc(100vh - 50px); }
+    .sidebar { width: 200px; background: #111; padding: 15px; border-right: 1px solid #222; overflow-y: auto; }
+    .main { flex: 1; display: flex; flex-direction: column; }
+
+    /* ---------------- PAIR SELECT & CHART ---------------- */
+    .pair-selector { background: #0f0f0f; padding: 10px; border-bottom: 1px solid #222; display: flex; gap: 10px; }
+    select { background: #111; color: #fff; border: 1px solid #333; padding: 5px; }
+
+    #chart { flex: 1; background: #0b0b0b; margin: 10px; border: 1px solid #222; }
+
+    /* ---------------- ORDERBOOK/TRADES ---------------- */
+    .market-info { display: flex; gap: 10px; margin: 10px; flex: 1; }
+    .orderbook, .trades { flex: 1; background: #111; border: 1px solid #222; overflow-y: auto; padding: 10px; }
+    .orderbook h2, .trades h2 { font-size: 14px; margin-bottom: 5px; color: #f0b90b; }
+
+    table { width: 100%; font-size: 12px; border-collapse: collapse; }
+    th, td { padding: 3px; text-align: right; }
+    th { color: #aaa; border-bottom: 1px solid #222; }
+    .buy { color: #00b894; }
+    .sell { color: #d63031; }
+
+    /* ---------------- ORDER FORM ---------------- */
+    .order-form { display: flex; gap: 10px; margin: 10px; }
+    .order-form div { flex: 1; display: flex; flex-direction: column; }
+    .order-form input, .order-form button { padding: 5px; margin-top: 5px; border: 1px solid #333; background: #111; color: #fff; }
+    .order-form button.buy { background: #00b894; border: none; cursor: pointer; }
+    .order-form button.sell { background: #d63031; border: none; cursor: pointer; }
+
   </style>
 </head>
 <body>
-  <header>
-    <h1>Mutual Exchange</h1>
-  </header>
-  <main>
-    <div id="auth">
-      <h2>Login</h2>
-      <form id="loginForm">
-        <input type="text" id="loginUsername" placeholder="Username" required>
-        <input type="password" id="loginPassword" placeholder="Password" required>
-        <button type="submit">Login</button>
-      </form>
 
-      <h2>Register</h2>
-      <form id="registerForm">
-        <input type="text" id="registerUsername" placeholder="Username" required>
-        <input type="password" id="registerPassword" placeholder="Password" required>
-        <button type="submit">Register</button>
-      </form>
-    </div>
+<header>
+  <h1>DME Exchange</h1>
+  <div class="balances">
+    <span>USDT: <b id="bal-usdt">0</b></span>
+    <span>BTC: <b id="bal-btc">0</b></span>
+    <span>ETH: <b id="bal-eth">0</b></span>
+  </div>
+</header>
 
-    <div id="exchange" style="display:none;">
-      <h2>Balances</h2>
-      <div id="balances"></div>
+<div class="container">
+  <div class="sidebar">
+    <h2>Wallet</h2>
+    <ul id="wallet-list"></ul>
+  </div>
 
-      <h2>Prices</h2>
-      <div id="prices"></div>
-
-      <h2>Place Order</h2>
-      <form id="orderForm">
-        <select id="pairSelect">
+  <div class="main">
+    <div class="pair-selector">
+      <label>Pair:
+        <select id="pair-select">
           <option value="BTCUSDT">BTC/USDT</option>
           <option value="ETHUSDT">ETH/USDT</option>
           <option value="SOLUSDT">SOL/USDT</option>
           <option value="BNBUSDT">BNB/USDT</option>
           <option value="ADAUSDT">ADA/USDT</option>
-          <option value="XRPUSDT">XRP/USDT</option>
-          <option value="DOGEUSDT">DOGE/USDT</option>
-          <option value="DOTUSDT">DOT/USDT</option>
-          <option value="AVAXUSDT">AVAX/USDT</option>
         </select>
-        <select id="sideSelect">
-          <option value="buy">Buy</option>
-          <option value="sell">Sell</option>
-        </select>
-        <input type="number" step="0.0001" id="priceInput" placeholder="Price" required>
-        <input type="number" step="0.0001" id="amountInput" placeholder="Amount" required>
-        <button type="submit">Place Order</button>
-      </form>
-
-      <h2>Order Book</h2>
-      <table>
-        <thead>
-          <tr><th>Side</th><th>Price</th><th>Amount</th></tr>
-        </thead>
-        <tbody id="orderbook"></tbody>
-      </table>
-
-      <h2>Recent Trades</h2>
-      <table>
-        <thead>
-          <tr><th>Pair</th><th>Side</th><th>Price</th><th>Amount</th></tr>
-        </thead>
-        <tbody id="trades"></tbody>
-      </table>
+      </label>
+      <span>Price: <b id="current-price">0</b></span>
     </div>
-  </main>
 
-  <script>
-    let currentUser = null;
+    <div id="chart">[Chart Placeholder]</div>
 
-    async function fetchPrices() {
-      const res = await fetch('/api/prices');
-      const data = await res.json();
-      const pricesDiv = document.getElementById('prices');
-      pricesDiv.innerHTML = '';
-      Object.keys(data).forEach(pair => {
-        const card = document.createElement('div');
-        card.className = 'price-card';
-        card.textContent = pair + ': ' + data[pair].toFixed(4);
-        pricesDiv.appendChild(card);
-      });
+    <div class="market-info">
+      <div class="orderbook">
+        <h2>Order Book</h2>
+        <table>
+          <thead><tr><th>Price</th><th>Amount</th></tr></thead>
+          <tbody id="bids"></tbody>
+          <tbody id="asks"></tbody>
+        </table>
+      </div>
+
+      <div class="trades">
+        <h2>Recent Trades</h2>
+        <table>
+          <thead><tr><th>Price</th><th>Amount</th></tr></thead>
+          <tbody id="trades"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="order-form">
+      <div>
+        <label>Buy Price</label>
+        <input type="number" id="buy-price">
+        <label>Amount</label>
+        <input type="number" id="buy-amount">
+        <button class="buy" id="buy-btn">Buy</button>
+      </div>
+      <div>
+        <label>Sell Price</label>
+        <input type="number" id="sell-price">
+        <label>Amount</label>
+        <input type="number" id="sell-amount">
+        <button class="sell" id="sell-btn">Sell</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentPair = 'BTCUSDT';
+
+  async function fetchBalance() {
+    const res = await fetch('/api/balance?username=test');
+    const bal = await res.json();
+    document.getElementById('bal-usdt').textContent = bal.USDT.toFixed(2);
+    document.getElementById('bal-btc').textContent = bal.BTC.toFixed(6);
+    document.getElementById('bal-eth').textContent = bal.ETH.toFixed(6);
+    // Sidebar list
+    const walletList = document.getElementById('wallet-list');
+    walletList.innerHTML = '';
+    for (let k in bal) {
+      const li = document.createElement('li');
+      li.textContent = `${k}: ${bal[k].toFixed(6)}`;
+      walletList.appendChild(li);
     }
+  }
 
-    async function fetchBalances() {
-      const res = await fetch('/api/balance?username=' + currentUser.username);
-      const data = await res.json();
-      const balancesDiv = document.getElementById('balances');
-      balancesDiv.innerHTML = '';
-      for (const asset in data) {
-        balancesDiv.innerHTML += `<div>${asset}: ${data[asset]}</div>`;
-      }
-    }
+  async function fetchPrice() {
+    const res = await fetch('/api/prices');
+    const prices = await res.json();
+    document.getElementById('current-price').textContent = prices[currentPair].toFixed(2);
+  }
 
-    async function fetchOrderBook(pair) {
-      const res = await fetch('/api/orderbook?pair=' + pair);
-      const data = await res.json();
-      const tbody = document.getElementById('orderbook');
-      tbody.innerHTML = '';
-      data.bids.forEach(o => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>Buy</td><td>${o.price}</td><td>${o.amount}</td>`;
-        tbody.appendChild(tr);
-      });
-      data.asks.forEach(o => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>Sell</td><td>${o.price}</td><td>${o.amount}</td>`;
-        tbody.appendChild(tr);
-      });
-    }
+  async function fetchOrderBook() {
+    const res = await fetch(`/api/orderbook?pair=${currentPair}`);
+    const data = await res.json();
+    const bidsEl = document.getElementById('bids');
+    const asksEl = document.getElementById('asks');
+    bidsEl.innerHTML = '';
+    asksEl.innerHTML = '';
+    data.bids.slice(-10).reverse().forEach(o => bidsEl.innerHTML += `<tr><td class="buy">${o.price}</td><td>${o.amount}</td></tr>`);
+    data.asks.slice(0,10).forEach(o => asksEl.innerHTML += `<tr><td class="sell">${o.price}</td><td>${o.amount}</td></tr>`);
+  }
 
-    async function fetchTrades() {
-      const res = await fetch('/api/trades');
-      const data = await res.json();
-      const tbody = document.getElementById('trades');
-      tbody.innerHTML = '';
-      data.trades.forEach(t => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${t.pair}</td><td>${t.side}</td><td>${t.price}</td><td>${t.amount}</td>`;
-        tbody.appendChild(tr);
-      });
-    }
+  async function fetchTrades() {
+    const res = await fetch('/api/trades');
+    const data = await res.json();
+    const tradesEl = document.getElementById('trades');
+    tradesEl.innerHTML = '';
+    data.trades.slice(-10).reverse().forEach(t => tradesEl.innerHTML += `<tr><td>${t.price}</td><td>${t.amount}</td></tr>`);
+  }
 
-    document.getElementById('loginForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const username = document.getElementById('loginUsername').value;
-      const password = document.getElementById('loginPassword').value;
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({username, password})
-      });
-      const data = await res.json();
-      if (data.success) {
-        currentUser = data.user;
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('exchange').style.display = 'block';
-        initExchange();
-      } else {
-        alert(data.error);
-      }
+  document.getElementById('pair-select').addEventListener('change', e => { currentPair = e.target.value; });
+
+  document.getElementById('buy-btn').addEventListener('click', async () => {
+    const price = parseFloat(document.getElementById('buy-price').value);
+    const amount = parseFloat(document.getElementById('buy-amount').value);
+    await fetch('/api/orders', {
+      method: 'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:'test', pair: currentPair, side:'buy', price, amount})
     });
+    fetchBalance(); fetchOrderBook(); fetchTrades();
+  });
 
-    document.getElementById('registerForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const username = document.getElementById('registerUsername').value;
-      const password = document.getElementById('registerPassword').value;
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({username, password})
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('Registered successfully! You can now log in.');
-      } else {
-        alert(data.error);
-      }
+  document.getElementById('sell-btn').addEventListener('click', async () => {
+    const price = parseFloat(document.getElementById('sell-price').value);
+    const amount = parseFloat(document.getElementById('sell-amount').value);
+    await fetch('/api/orders', {
+      method: 'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:'test', pair: currentPair, side:'sell', price, amount})
     });
+    fetchBalance(); fetchOrderBook(); fetchTrades();
+  });
 
-    document.getElementById('orderForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const pair = document.getElementById('pairSelect').value;
-      const side = document.getElementById('sideSelect').value;
-      const price = parseFloat(document.getElementById('priceInput').value);
-      const amount = parseFloat(document.getElementById('amountInput').value);
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({username: currentUser.username, pair, side, price, amount})
-      });
-      const data = await res.json();
-      if (data.success) {
-        fetchBalances();
-        fetchOrderBook(pair);
-        fetchTrades();
-      } else {
-        alert(data.error);
-      }
-    });
+  function refresh() {
+    fetchBalance();
+    fetchPrice();
+    fetchOrderBook();
+    fetchTrades();
+  }
 
-    function initExchange() {
-      fetchBalances();
-      fetchPrices();
-      fetchTrades();
-      fetchOrderBook(document.getElementById('pairSelect').value);
-      setInterval(() => {
-        fetchPrices();
-        fetchBalances();
-        fetchTrades();
-        fetchOrderBook(document.getElementById('pairSelect').value);
-      }, 2000);
-    }
-  </script>
+  setInterval(refresh, 1500);
+  refresh();
+</script>
+
 </body>
 </html>
