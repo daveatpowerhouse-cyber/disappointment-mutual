@@ -1,321 +1,1510 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mutual Exchange</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #0b0b0b;
-            color: #fff;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Exchange - Trade Bitcoin, Ethereum & More</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        header {
-            background: #141414;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #333;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #0b0e11;
+      color: #eaecef;
+      overflow-x: hidden;
+    }
 
-        header h1 {
-            margin: 0;
-            font-size: 20px;
-            color: #f0b90b;
-        }
+    /* Header */
+    .header {
+      background: #181a20;
+      border-bottom: 1px solid #2b3139;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-        header nav a {
-            color: #fff;
-            text-decoration: none;
-            margin-left: 15px;
-            font-size: 14px;
-        }
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #f0b90b 0%, #f8d33a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
 
-        .container {
-            display: flex;
-            height: calc(100vh - 50px);
-        }
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
 
-        .sidebar {
-            width: 250px;
-            background: #141414;
-            padding: 20px;
-            border-right: 1px solid #333;
-            box-sizing: border-box;
-        }
+    .nav-link {
+      color: #848e9c;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
 
-        .sidebar h2 {
-            font-size: 16px;
-            margin-bottom: 10px;
-            color: #f0b90b;
-        }
+    .nav-link:hover {
+      color: #eaecef;
+    }
 
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
+    .user-section {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
 
-        .sidebar li {
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
+    .balance-display {
+      background: #1e2329;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
 
-        .sidebar li:hover {
-            color: #f0b90b;
-        }
+    .balance-label {
+      color: #848e9c;
+      font-size: 11px;
+    }
 
-        .main {
-            flex: 1;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
+    .balance-value {
+      color: #f0b90b;
+      font-weight: 600;
+      font-size: 14px;
+    }
 
-        .login-form {
-            max-width: 300px;
-            margin: 0 auto;
-            background: #1c1c1c;
-            padding: 20px;
-            border-radius: 5px;
-            border: 1px solid #333;
-        }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
 
-        .login-form h2 {
-            margin-top: 0;
-            text-align: center;
-            color: #f0b90b;
-        }
+    .btn-primary {
+      background: linear-gradient(135deg, #f0b90b 0%, #f8d33a 100%);
+      color: #000;
+    }
 
-        .login-form input {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0 15px 0;
-            border-radius: 3px;
-            border: 1px solid #555;
-            background: #0b0b0b;
-            color: #fff;
-        }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(240, 185, 11, 0.3);
+    }
 
-        .login-form button {
-            width: 100%;
-            padding: 10px;
-            background: #f0b90b;
-            border: none;
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 3px;
-        }
+    .btn-secondary {
+      background: #2b3139;
+      color: #eaecef;
+      border: 1px solid #474d57;
+    }
 
-        .login-form button:hover {
-            background: #ddb100;
-        }
+    .btn-secondary:hover {
+      background: #474d57;
+    }
 
-        .prices {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+    /* Main Layout */
+    .main-container {
+      display: grid;
+      grid-template-columns: 320px 1fr 360px;
+      grid-template-rows: auto 1fr;
+      height: calc(100vh - 64px);
+      gap: 1px;
+      background: #2b3139;
+    }
 
-        .prices .crypto {
-            background: #1c1c1c;
-            padding: 10px 15px;
-            border-radius: 5px;
-            border: 1px solid #333;
-            margin-bottom: 10px;
-            width: 120px;
-            text-align: center;
-        }
+    /* Ticker Bar */
+    .ticker-bar {
+      grid-column: 1 / -1;
+      background: #181a20;
+      padding: 16px 24px;
+      overflow-x: auto;
+      white-space: nowrap;
+      display: flex;
+      gap: 24px;
+    }
 
-        .order-book, .trade-history {
-            background: #1c1c1c;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #333;
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 10px;
-        }
+    .ticker-bar::-webkit-scrollbar {
+      height: 4px;
+    }
 
-        .order-book table, .trade-history table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+    .ticker-item {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 6px;
+      min-width: 120px;
+    }
 
-        .order-book th, .order-book td,
-        .trade-history th, .trade-history td {
-            padding: 5px;
-            font-size: 12px;
-        }
+    .ticker-item:hover {
+      background: #2b3139;
+    }
 
-        .buy {
-            color: #00b07c;
-        }
+    .ticker-item.active {
+      background: #2b3139;
+      border: 1px solid #f0b90b;
+    }
 
-        .sell {
-            color: #ff4d4d;
-        }
+    .ticker-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-    </style>
+    .ticker-symbol {
+      font-weight: 600;
+      font-size: 14px;
+      color: #eaecef;
+    }
+
+    .ticker-badge {
+      font-size: 10px;
+      color: #848e9c;
+      background: #2b3139;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .ticker-price {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .ticker-change {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .up {
+      color: #0ecb81;
+    }
+
+    .down {
+      color: #f6465d;
+    }
+
+    /* Left Panel - Orderbook & Trades */
+    .left-panel {
+      background: #181a20;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-bottom: 1px solid #2b3139;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1a1d24;
+    }
+
+    .panel-tabs {
+      display: flex;
+      gap: 16px;
+    }
+
+    .panel-tab {
+      font-size: 13px;
+      color: #848e9c;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .panel-tab.active {
+      color: #f0b90b;
+      font-weight: 600;
+    }
+
+    .orderbook {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 12px;
+    }
+
+    .orderbook-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      padding: 3px 20px;
+      position: relative;
+      transition: background 0.1s;
+    }
+
+    .orderbook-row:hover {
+      background: #1e2329;
+    }
+
+    .orderbook-header {
+      color: #848e9c;
+      padding: 10px 20px;
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: sticky;
+      top: 0;
+      background: #181a20;
+      z-index: 1;
+    }
+
+    .orderbook-bg {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      opacity: 0.12;
+      transition: width 0.3s;
+    }
+
+    .orderbook-bg.bid {
+      background: #0ecb81;
+    }
+
+    .orderbook-bg.ask {
+      background: #f6465d;
+    }
+
+    .current-price-section {
+      padding: 12px 20px;
+      background: #1e2329;
+      border-top: 1px solid #2b3139;
+      border-bottom: 1px solid #2b3139;
+    }
+
+    .current-price {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .price-change-small {
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .recent-trades {
+      height: 280px;
+      overflow-y: auto;
+      font-size: 12px;
+    }
+
+    /* Center Panel - Chart */
+    .center-panel {
+      background: #181a20;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chart-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #2b3139;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1a1d24;
+    }
+
+    .chart-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .chart-subtitle {
+      font-size: 12px;
+      color: #848e9c;
+      margin-top: 2px;
+    }
+
+    .chart-timeframes {
+      display: flex;
+      gap: 8px;
+    }
+
+    .timeframe-btn {
+      padding: 6px 12px;
+      background: transparent;
+      border: none;
+      color: #848e9c;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .timeframe-btn:hover {
+      background: #2b3139;
+      color: #eaecef;
+    }
+
+    .timeframe-btn.active {
+      background: #2b3139;
+      color: #f0b90b;
+    }
+
+    .chart-container {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #priceChart {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Right Panel - Trading */
+    .right-panel {
+      background: #181a20;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .trading-tabs {
+      display: flex;
+      border-bottom: 1px solid #2b3139;
+      background: #1a1d24;
+    }
+
+    .trading-tab {
+      flex: 1;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      color: #848e9c;
+    }
+
+    .trading-tab:hover {
+      color: #eaecef;
+    }
+
+    .trading-tab.active.buy {
+      color: #0ecb81;
+      border-bottom-color: #0ecb81;
+    }
+
+    .trading-tab.active.sell {
+      color: #f6465d;
+      border-bottom-color: #f6465d;
+    }
+
+    .trading-form {
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #848e9c;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #1e2329;
+      border: 1px solid #2b3139;
+      border-radius: 4px;
+      color: #eaecef;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #f0b90b;
+      background: #252930;
+    }
+
+    .form-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .input-group {
+      position: relative;
+    }
+
+    .input-suffix {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #848e9c;
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .percentage-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .percentage-btn {
+      padding: 8px;
+      background: #2b3139;
+      border: 1px solid #474d57;
+      border-radius: 4px;
+      color: #848e9c;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .percentage-btn:hover {
+      background: #474d57;
+      color: #eaecef;
+      border-color: #5e6673;
+    }
+
+    .percentage-btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn-buy {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #0ecb81 0%, #0db872 100%);
+      color: #fff;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-buy:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(14, 203, 129, 0.3);
+    }
+
+    .btn-buy:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-sell {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #f6465d 0%, #e03e52 100%);
+      color: #fff;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-sell:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(246, 70, 93, 0.3);
+    }
+
+    .btn-sell:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #1e2329;
+      padding: 40px;
+      border-radius: 12px;
+      width: 440px;
+      max-width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-align: center;
+      background: linear-gradient(135deg, #f0b90b 0%, #f8d33a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .modal-subheader {
+      text-align: center;
+      color: #848e9c;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 28px;
+      justify-content: center;
+      background: #181a20;
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .modal-tab {
+      flex: 1;
+      padding: 10px 24px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: all 0.2s;
+      text-align: center;
+      color: #848e9c;
+    }
+
+    .modal-tab.active {
+      background: linear-gradient(135deg, #f0b90b 0%, #f8d33a 100%);
+      color: #000;
+    }
+
+    .message {
+      padding: 14px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+      animation: messageSlideIn 0.3s ease-out;
+    }
+
+    @keyframes messageSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.active {
+      display: block;
+    }
+
+    .error-message {
+      background: rgba(246, 70, 93, 0.15);
+      border-left: 3px solid #f6465d;
+      color: #f6465d;
+    }
+
+    .success-message {
+      background: rgba(14, 203, 129, 0.15);
+      border-left: 3px solid #0ecb81;
+      color: #0ecb81;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1e2329;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #474d57;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #5e6673;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .mt-2 {
+      margin-top: 20px;
+    }
+
+    .text-muted {
+      color: #848e9c;
+      font-size: 13px;
+    }
+
+    .link {
+      color: #f0b90b;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #2b3139;
+      border-top-color: #f0b90b;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      color: #848e9c;
+      font-size: 13px;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.3;
+    }
+
+    /* Responsive */
+    @media (max-width: 1400px) {
+      .main-container {
+        grid-template-columns: 280px 1fr 320px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .main-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+      }
+      
+      .left-panel, .right-panel {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Mutual Exchange</h1>
-        <nav>
-            <a href="#" id="loginLink">Login</a>
-            <a href="#" id="registerLink">Register</a>
-        </nav>
-    </header>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">⚡ EXCHANGE</div>
+    <div class="nav-links">
+      <span class="nav-link">Markets</span>
+      <span class="nav-link">Trade</span>
+      <span class="nav-link">Futures</span>
+    </div>
+    <div class="user-section" id="userSection">
+      <button class="btn btn-primary" onclick="showAuthModal()">Login / Register</button>
+    </div>
+  </div>
 
-    <div class="container">
-        <div class="sidebar">
-            <h2>Markets</h2>
-            <ul id="marketList">
-                <!-- Market pairs will be added here dynamically -->
-            </ul>
-        </div>
-
-        <div class="main">
-            <div class="login-form" id="loginForm">
-                <h2>Login</h2>
-                <input type="text" id="username" placeholder="Username">
-                <input type="password" id="password" placeholder="Password">
-                <button id="loginBtn">Login</button>
-                <button id="registerBtn">Register</button>
-                <p id="loginError" style="color:red;"></p>
-            </div>
-
-            <div id="dashboard" style="display:none;">
-                <h2>Dashboard</h2>
-                <div class="prices" id="pricesContainer">
-                    <!-- Crypto prices dynamically added -->
-                </div>
-
-                <div style="display:flex; gap:10px; height:400px;">
-                    <div class="order-book" id="orderBook">
-                        <h3>Order Book</h3>
-                        <table id="orderBookTable">
-                            <thead>
-                                <tr>
-                                    <th>Price</th>
-                                    <th>Amount</th>
-                                    <th>Side</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-
-                    <div class="trade-history" id="tradeHistory">
-                        <h3>Recent Trades</h3>
-                        <table id="tradeTable">
-                            <thead>
-                                <tr>
-                                    <th>Price</th>
-                                    <th>Amount</th>
-                                    <th>Side</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Ticker Bar -->
+    <div class="ticker-bar" id="tickerBar">
+      <div class="loading-spinner"></div>
     </div>
 
-    <script>
-        const apiBase = '/api';
-        let currentUser = null;
+    <!-- Left Panel: Orderbook & Recent Trades -->
+    <div class="left-panel">
+      <div class="panel-header">
+        <span>Order Book</span>
+        <div class="panel-tabs">
+          <span class="panel-tab active">0.01</span>
+        </div>
+      </div>
+      <div class="orderbook">
+        <div class="orderbook-header orderbook-row">
+          <div>Price(USDT)</div>
+          <div>Amount</div>
+          <div>Total</div>
+        </div>
+        <div id="orderbookAsks"></div>
+        <div class="current-price-section">
+          <div class="current-price up" id="currentPrice">--</div>
+        </div>
+        <div id="orderbookBids"></div>
+      </div>
+      <div class="panel-header">
+        <span>Recent Trades</span>
+        <div class="panel-tabs">
+          <span class="panel-tab active">Market</span>
+        </div>
+      </div>
+      <div class="recent-trades">
+        <div class="orderbook-header orderbook-row">
+          <div>Price(USDT)</div>
+          <div>Amount</div>
+          <div>Time</div>
+        </div>
+        <div id="recentTrades"></div>
+      </div>
+    </div>
 
-        async function fetchPrices() {
-            const res = await fetch(apiBase + '/prices');
-            const data = await res.json();
-            const container = document.getElementById('pricesContainer');
-            container.innerHTML = '';
-            for (const [pair, price] of Object.entries(data)) {
-                const div = document.createElement('div');
-                div.className = 'crypto';
-                div.innerHTML = `<strong>${pair}</strong><br>${price.toFixed(2)}`;
-                container.appendChild(div);
-            }
-        }
+    <!-- Center Panel: Chart -->
+    <div class="center-panel">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title" id="chartTitle">BTC/USDT</div>
+          <div class="chart-subtitle">Real-time Price Chart</div>
+        </div>
+        <div class="chart-timeframes">
+          <button class="timeframe-btn">1m</button>
+          <button class="timeframe-btn">5m</button>
+          <button class="timeframe-btn active">15m</button>
+          <button class="timeframe-btn">1h</button>
+          <button class="timeframe-btn">4h</button>
+          <button class="timeframe-btn">1d</button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="priceChart"></canvas>
+      </div>
+    </div>
 
-        async function fetchOrderBook() {
-            const res = await fetch(apiBase + '/orderbook?pair=BTCUSDT');
-            const data = await res.json();
-            const tbody = document.querySelector('#orderBookTable tbody');
-            tbody.innerHTML = '';
-            data.bids.forEach(o => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${o.price}</td><td>${o.amount}</td><td class="buy">Buy</td>`;
-                tbody.appendChild(tr);
-            });
-            data.asks.forEach(o => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${o.price}</td><td>${o.amount}</td><td class="sell">Sell</td>`;
-                tbody.appendChild(tr);
-            });
-        }
+    <!-- Right Panel: Trading Form -->
+    <div class="right-panel">
+      <div class="trading-tabs">
+        <div class="trading-tab active buy" id="buyTab" onclick="switchTab('buy')">Buy</div>
+        <div class="trading-tab sell" id="sellTab" onclick="switchTab('sell')">Sell</div>
+      </div>
+      <div class="trading-form">
+        <div class="form-group">
+          <label class="form-label">
+            <span>Available</span>
+            <span id="availableBalance" style="color: #eaecef;">0.00 USDT</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price</label>
+          <div class="input-group">
+            <input type="number" class="form-input" id="orderPrice" placeholder="0.00" step="0.01">
+            <span class="input-suffix">USDT</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount</label>
+          <div class="input-group">
+            <input type="number" class="form-input" id="orderAmount" placeholder="0.00" step="0.000001">
+            <span class="input-suffix" id="amountSuffix">BTC</span>
+          </div>
+          <div class="percentage-buttons">
+            <button class="percentage-btn" onclick="setPercentage(25)">25%</button>
+            <button class="percentage-btn" onclick="setPercentage(50)">50%</button>
+            <button class="percentage-btn" onclick="setPercentage(75)">75%</button>
+            <button class="percentage-btn" onclick="setPercentage(100)">100%</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total</label>
+          <div class="input-group">
+            <input type="number" class="form-input" id="orderTotal" placeholder="0.00" readonly>
+            <span class="input-suffix">USDT</span>
+          </div>
+        </div>
+        <button class="btn btn-buy" id="submitBtn" onclick="placeOrder()" style="margin-top: 24px;">
+          Buy <span id="tradeCrypto">BTC</span>
+        </button>
+        <div class="text-center mt-2">
+          <span class="text-muted">No account? <span class="link" onclick="showAuthModal()">Register now</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        async function fetchTrades() {
-            const res = await fetch(apiBase + '/trades');
-            const data = await res.json();
-            const tbody = document.querySelector('#tradeTable tbody');
-            tbody.innerHTML = '';
-            data.trades.forEach(t => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${t.price}</td><td>${t.amount}</td><td class="${t.side}">${t.side}</td>`;
-                tbody.appendChild(tr);
-            });
-        }
+  <!-- Auth Modal -->
+  <div class="modal" id="authModal" onclick="handleModalClick(event)">
+    <div class="modal-content">
+      <div class="modal-header">Welcome Back</div>
+      <div class="modal-subheader">Start trading in seconds</div>
+      <div class="modal-tabs">
+        <div class="modal-tab active" id="loginTab" onclick="switchAuthTab('login')">Login</div>
+        <div class="modal-tab" id="registerTab" onclick="switchAuthTab('register')">Register</div>
+      </div>
+      <div class="error-message" id="authError"></div>
+      <div class="success-message" id="authSuccess"></div>
+      <form id="authForm" onsubmit="handleAuth(event)">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-input" id="authUsername" placeholder="Enter your username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="authPassword" placeholder="Enter your password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 24px; padding: 14px;">
+          <span id="authButtonText">Login</span>
+        </button>
+      </form>
+    </div>
+  </div>
 
-        document.getElementById('loginBtn').addEventListener('click', async () => {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const res = await fetch(apiBase + '/login', {
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({username,password})
-            });
-            const data = await res.json();
-            if(data.success){
-                currentUser = data.user;
-                document.getElementById('loginForm').style.display='none';
-                document.getElementById('dashboard').style.display='block';
-                fetchPrices();
-                fetchOrderBook();
-                fetchTrades();
-                setInterval(fetchPrices,1500);
-                setInterval(fetchOrderBook,1500);
-                setInterval(fetchTrades,1500);
-            } else {
-                document.getElementById('loginError').innerText = data.error;
-            }
+  <script>
+    // ==================== STATE ====================
+    let currentUser = null;
+    let currentPair = 'BTCUSDT';
+    let currentSide = 'buy';
+    let authMode = 'login';
+    let prices = {};
+    let priceHistory = {};
+    let chartContext = null;
+    let lastPrices = {};
+
+    // ==================== INITIALIZATION ====================
+    init();
+
+    function init() {
+      console.log('🚀 Initializing Exchange...');
+      setupChart();
+      fetchPrices();
+      fetchOrderbook();
+      fetchTrades();
+      
+      // Poll data every 1.5 seconds
+      setInterval(() => {
+        fetchPrices();
+        fetchOrderbook();
+        fetchTrades();
+      }, 1500);
+
+      // Update chart every 3 seconds
+      setInterval(updateChart, 3000);
+
+      // Calculate total on input change
+      document.getElementById('orderPrice').addEventListener('input', calculateTotal);
+      document.getElementById('orderAmount').addEventListener('input', calculateTotal);
+    }
+
+    // ==================== AUTH ====================
+    function showAuthModal() {
+      document.getElementById('authModal').classList.add('active');
+      document.getElementById('authUsername').focus();
+    }
+
+    function hideAuthModal() {
+      document.getElementById('authModal').classList.remove('active');
+      document.getElementById('authForm').reset();
+      document.getElementById('authError').classList.remove('active');
+      document.getElementById('authSuccess').classList.remove('active');
+    }
+
+    function handleModalClick(event) {
+      if (event.target.id === 'authModal') {
+        hideAuthModal();
+      }
+    }
+
+    function switchAuthTab(mode) {
+      authMode = mode;
+      document.getElementById('loginTab').classList.toggle('active', mode === 'login');
+      document.getElementById('registerTab').classList.toggle('active', mode === 'register');
+      document.getElementById('authButtonText').textContent = mode === 'login' ? 'Login' : 'Create Account';
+      document.getElementById('authError').classList.remove('active');
+      document.getElementById('authSuccess').classList.remove('active');
+    }
+
+    async function handleAuth(e) {
+      e.preventDefault();
+      const username = document.getElementById('authUsername').value.trim();
+      const password = document.getElementById('authPassword').value;
+      
+      if (!username || !password) {
+        showError('Please fill in all fields');
+        return;
+      }
+      
+      const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span>';
+      
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
         });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          showError(data.error || 'Authentication failed');
+          btn.disabled = false;
+          btn.innerHTML = `<span>${authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
+          return;
+        }
+        
+        currentUser = data.user;
+        console.log('✅ Authentication successful:', currentUser.username);
+        showSuccess(authMode === 'login' ? 'Welcome back!' : 'Account created successfully!');
+        
+        setTimeout(() => {
+          hideAuthModal();
+          updateUserSection();
+          fetchBalance();
+          btn.disabled = false;
+          btn.innerHTML = `<span>${authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
+        }, 1000);
+        
+      } catch (err) {
+        console.error('Auth error:', err);
+        showError('Connection error. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = `<span>${authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
+      }
+    }
 
-        document.getElementById('registerBtn').addEventListener('click', async () => {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const res = await fetch(apiBase + '/register', {
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({username,password})
-            });
-            const data = await res.json();
-            if(data.success){
-                alert('Registration successful! You can now login.');
-            } else {
-                document.getElementById('loginError').innerText = data.error;
-            }
+    function showError(msg) {
+      const el = document.getElementById('authError');
+      el.textContent = msg;
+      el.classList.add('active');
+      setTimeout(() => el.classList.remove('active'), 4000);
+    }
+
+    function showSuccess(msg) {
+      const el = document.getElementById('authSuccess');
+      el.textContent = msg;
+      el.classList.add('active');
+    }
+
+    function logout() {
+      currentUser = null;
+      console.log('👋 Logged out');
+      updateUserSection();
+    }
+
+    function updateUserSection() {
+      const section = document.getElementById('userSection');
+      if (currentUser) {
+        section.innerHTML = `
+          <div class="balance-display">
+            <div class="balance-label">Total Balance</div>
+            <div class="balance-value" id="userBalance">Loading...</div>
+          </div>
+          <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        `;
+      } else {
+        section.innerHTML = `
+          <button class="btn btn-primary" onclick="showAuthModal()">Login / Register</button>
+        `;
+      }
+    }
+
+    async function fetchBalance() {
+      if (!currentUser) return;
+      
+      try {
+        const res = await fetch(`/api/balance?username=${encodeURIComponent(currentUser.username)}`);
+        const balance = await res.json();
+        currentUser.balance = balance;
+        
+        const usdtBalance = (balance.USDT || 0).toFixed(2);
+        const balanceEl = document.getElementById('userBalance');
+        if (balanceEl) {
+          balanceEl.textContent = `${usdtBalance} USDT`;
+        }
+        
+        updateAvailableBalance();
+      } catch (err) {
+        console.error('Failed to fetch balance:', err);
+      }
+    }
+
+    function updateAvailableBalance() {
+      if (!currentUser) {
+        document.getElementById('availableBalance').textContent = '0.00 USDT';
+        return;
+      }
+      
+      const crypto = currentPair.replace('USDT', '');
+      if (currentSide === 'buy') {
+        const available = (currentUser.balance.USDT || 0).toFixed(2);
+        document.getElementById('availableBalance').textContent = `${available} USDT`;
+      } else {
+        const available = (currentUser.balance[crypto] || 0).toFixed(6);
+        document.getElementById('availableBalance').textContent = `${available} ${crypto}`;
+      }
+    }
+
+    // ==================== PRICES ====================
+    async function fetchPrices() {
+      try {
+        const res = await fetch('/api/prices');
+        const newPrices = await res.json();
+        
+        // Track price changes
+        Object.keys(newPrices).forEach(pair => {
+          if (lastPrices[pair]) {
+            const change = newPrices[pair] - lastPrices[pair];
+            newPrices[pair + '_change'] = change;
+          }
         });
+        
+        lastPrices = { ...newPrices };
+        prices = newPrices;
+        
+        updateTicker();
+        updateCurrentPrice();
+        
+        // Update price history for chart
+        Object.keys(prices).forEach(pair => {
+          if (!pair.includes('_change')) {
+            if (!priceHistory[pair]) priceHistory[pair] = [];
+            priceHistory[pair].push(prices[pair]);
+            if (priceHistory[pair].length > 100) priceHistory[pair].shift();
+          }
+        });
+        
+      } catch (err) {
+        console.error('Failed to fetch prices:', err);
+      }
+    }
 
-    </script>
+    function updateTicker() {
+      const tickerBar = document.getElementById('tickerBar');
+      const pairs = Object.keys(prices).filter(p => !p.includes('_change'));
+      
+      if (!pairs.length) {
+        tickerBar.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div>Loading market data...</div>';
+        return;
+      }
+      
+      tickerBar.innerHTML = pairs.map(pair => {
+        const price = prices[pair];
+        const crypto = pair.replace('USDT', '');
+        const isActive = pair === currentPair ? 'active' : '';
+        const change = prices[pair + '_change'] || 0;
+        const changeClass = change >= 0 ? 'up' : 'down';
+        const changeText = change >= 0 ? `+${(change).toFixed(2)}` : `${(change).toFixed(2)}`;
+        
+        return `
+          <div class="ticker-item ${isActive}" onclick="selectPair('${pair}')">
+            <div class="ticker-header">
+              <span class="ticker-symbol">${crypto}/USDT</span>
+              <span class="ticker-badge">SPOT</span>
+            </div>
+            <div class="ticker-price ${changeClass}">${price.toFixed(2)}</div>
+            <div class="ticker-change ${changeClass}">${changeText}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateCurrentPrice() {
+      const price = prices[currentPair];
+      if (price) {
+        const el = document.getElementById('currentPrice');
+        const change = prices[currentPair + '_change'] || 0;
+        const changeClass = change >= 0 ? 'up' : 'down';
+        el.textContent = price.toFixed(2);
+        el.className = `current-price ${changeClass}`;
+      }
+    }
+
+    function selectPair(pair) {
+      currentPair = pair;
+      console.log('📌 Selected pair:', pair);
+      updateTicker();
+      updateCurrentPrice();
+      fetchOrderbook();
+      fetchTrades();
+      
+      const crypto = pair.replace('USDT', '');
+      document.getElementById('chartTitle').textContent = `${crypto}/USDT`;
+      document.getElementById('tradeCrypto').textContent = crypto;
+      document.getElementById('amountSuffix').textContent = crypto;
+      
+      const currentPrice = prices[pair];
+      if (currentPrice) {
+        document.getElementById('orderPrice').value = currentPrice.toFixed(2);
+      }
+      
+      if (currentUser) {
+        updateAvailableBalance();
+      }
+      
+      calculateTotal();
+    }
+
+    // ==================== ORDERBOOK ====================
+    async function fetchOrderbook() {
+      try {
+        const res = await fetch(`/api/orderbook?pair=${currentPair}`);
+        const data = await res.json();
+        
+        renderOrderbook('orderbookAsks', data.asks.slice(0, 12), 'ask');
+        renderOrderbook('orderbookBids', data.bids.slice(0, 12), 'bid');
+      } catch (err) {
+        console.error('Failed to fetch orderbook:', err);
+      }
+    }
+
+    function renderOrderbook(elementId, orders, type) {
+      const el = document.getElementById(elementId);
+      
+      if (!orders.length) {
+        el.innerHTML = '<div class="empty-state" style="padding: 20px;"><div class="empty-state-icon">📝</div>No orders</div>';
+        return;
+      }
+      
+      const maxTotal = Math.max(...orders.map(o => o.price * o.amount), 1);
+      
+      el.innerHTML = orders.map(order => {
+        const total = order.price * order.amount;
+        const percentage = (total / maxTotal) * 100;
+        const priceClass = type === 'bid' ? 'up' : 'down';
+        
+        return `
+          <div class="orderbook-row" onclick="fillPrice(${order.price})">
+            <div class="orderbook-bg ${type}" style="width: ${percentage}%"></div>
+            <div class="${priceClass}">${order.price.toFixed(2)}</div>
+            <div>${order.amount.toFixed(6)}</div>
+            <div>${total.toFixed(2)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function fillPrice(price) {
+      document.getElementById('orderPrice').value = price.toFixed(2);
+      calculateTotal();
+    }
+
+    // ==================== TRADES ====================
+    async function fetchTrades() {
+      try {
+        const res = await fetch('/api/trades');
+        const data = await res.json();
+        
+        const filtered = data.trades.filter(t => t.pair === currentPair).slice(-25).reverse();
+        
+        const el = document.getElementById('recentTrades');
+        if (!filtered.length) {
+          el.innerHTML = '<div class="empty-state" style="padding: 20px;"><div class="empty-state-icon">💱</div>No trades yet</div>';
+          return;
+        }
+        
+        el.innerHTML = filtered.map(trade => {
+          const time = new Date(trade.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+          const priceClass = trade.side === 'buy' ? 'up' : 'down';
+          
+          return `
+            <div class="orderbook-row">
+              <div class="${priceClass}">${trade.price.toFixed(2)}</div>
+              <div>${trade.amount.toFixed(6)}</div>
+              <div style="font-size: 11px; color: #848e9c;">${time}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Failed to fetch trades:', err);
+      }
+    }
+
+    // ==================== TRADING ====================
+    function switchTab(side) {
+      currentSide = side;
+      document.getElementById('buyTab').classList.toggle('active', side === 'buy');
+      document.getElementById('sellTab').classList.toggle('active', side === 'sell');
+      
+      const btn = document.getElementById('submitBtn');
+      const crypto = currentPair.replace('USDT', '');
+      
+      if (side === 'buy') {
+        btn.className = 'btn btn-buy';
+        btn.innerHTML = `Buy ${crypto}`;
+      } else {
+        btn.className = 'btn btn-sell';
+        btn.innerHTML = `Sell ${crypto}`;
+      }
+      
+      if (currentUser) {
+        updateAvailableBalance();
+      }
+      
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      const price = parseFloat(document.getElementById('orderPrice').value) || 0;
+      const amount = parseFloat(document.getElementById('orderAmount').value) || 0;
+      const total = price * amount;
+      document.getElementById('orderTotal').value = total.toFixed(2);
+    }
+
+    function setPercentage(pct) {
+      if (!currentUser) {
+        showAuthModal();
+        return;
+      }
+      
+      const price = parseFloat(document.getElementById('orderPrice').value) || prices[currentPair];
+      if (!price) return;
+      
+      const crypto = currentPair.replace('USDT', '');
+      
+      let amount = 0;
+      if (currentSide === 'buy') {
+        const available = currentUser.balance.USDT || 0;
+        amount = (available * pct / 100) / price;
+      } else {
+        const available = currentUser.balance[crypto] || 0;
+        amount = available * pct / 100;
+      }
+      
+      document.getElementById('orderAmount').value = amount.toFixed(6);
+      calculateTotal();
+    }
+
+    async function placeOrder() {
+      if (!currentUser) {
+        showAuthModal();
+        return;
+      }
+      
+      const price = parseFloat(document.getElementById('orderPrice').value);
+      const amount = parseFloat(document.getElementById('orderAmount').value);
+      
+      if (!price || !amount || price <= 0 || amount <= 0) {
+        alert('⚠️ Please enter valid price and amount');
+        return;
+      }
+      
+      const btn = document.getElementById('submitBtn');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> Placing Order...';
+      
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: currentUser.username,
+            pair: currentPair,
+            side: currentSide,
+            price,
+            amount
+          })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          alert('❌ ' + (data.error || 'Order failed'));
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+          return;
+        }
+        
+        console.log('✅ Order placed:', data.order);
+        alert(`✅ Order placed successfully!\n${currentSide.toUpperCase()} ${amount} ${currentPair.replace('USDT', '')} @ ${price} USDT`);
+        
+        // Clear form
+        document.getElementById('orderAmount').value = '';
+        document.getElementById('orderTotal').value = '';
+        
+        // Refresh data
+        fetchBalance();
+        fetchOrderbook();
+        fetchTrades();
+        
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        
+      } catch (err) {
+        console.error('Order error:', err);
+        alert('❌ Failed to place order. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      }
+    }
+
+    // ==================== CHART ====================
+    function setupChart() {
+      const canvas = document.getElementById('priceChart');
+      chartContext = canvas.getContext('2d');
+      
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth - 48;
+      canvas.height = container.clientHeight - 48;
+    }
+
+    function updateChart() {
+      if (!chartContext || !priceHistory[currentPair]) return;
+      
+      const canvas = chartContext.canvas;
+      const ctx = chartContext;
+      const data = priceHistory[currentPair] || [];
+      
+      if (data.length < 2) return;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const padding = 50;
+      const chartWidth = canvas.width - padding * 2;
+      const chartHeight = canvas.height - padding * 2;
+      
+      const minPrice = Math.min(...data);
+      const maxPrice = Math.max(...data);
+      const priceRange = maxPrice - minPrice || 1;
+      
+      // Grid
+      ctx.strokeStyle = '#2b3139';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      
+      for (let i = 0; i <= 5; i++) {
+        const y = padding + (chartHeight / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(canvas.width - padding, y);
+        ctx.stroke();
+        
+        const price = maxPrice - (priceRange / 5) * i;
+        ctx.fillStyle = '#848e9c';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(price.toFixed(2), padding - 10, y + 4);
+      }
+      
+      ctx.setLineDash([]);
+      
+      // Line
+      ctx.strokeStyle = '#0ecb81';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      
+      data.forEach((price, i) => {
+        const x = padding + (chartWidth / (data.length - 1)) * i;
+        const y = padding + chartHeight - ((price - minPrice) / priceRange) * chartHeight;
+        
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      
+      ctx.stroke();
+      
+      // Area
+      ctx.lineTo(canvas.width - padding, canvas.height - padding);
+      ctx.lineTo(padding, canvas.height - padding);
+      ctx.closePath();
+      
+      const gradient = ctx.createLinearGradient(0, padding, 0, canvas.height - padding);
+      gradient.addColorStop(0, 'rgba(14, 203, 129, 0.2)');
+      gradient.addColorStop(1, 'rgba(14, 203, 129, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      // Current price indicator
+      const currentPrice = data[data.length - 1];
+      const currentY = padding + chartHeight - ((currentPrice - minPrice) / priceRange) * chartHeight;
+      
+      ctx.fillStyle = '#0ecb81';
+      ctx.beginPath();
+      ctx.arc(canvas.width - padding, currentY, 5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#0ecb81';
+      ctx.fillRect(canvas.width - padding + 10, currentY - 12, 80, 24);
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(currentPrice.toFixed(2), canvas.width - padding + 50, currentY + 4);
+    }
+
+    window.addEventListener('resize', () => {
+      setupChart();
+      updateChart();
+    });
+
+    // ==================== KEYBOARD SHORTCUTS ====================
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('authModal').classList.contains('active')) {
+        hideAuthModal();
+      }
+    });
+
+    console.log('✅ Exchange initialized successfully!');
+  </script>
 </body>
 </html>
