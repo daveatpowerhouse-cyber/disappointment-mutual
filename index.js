@@ -5,42 +5,42 @@ import path from 'path';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Parse JSON request bodies
+// Parse JSON bodies from requests
 app.use(express.json());
 
 // --- Serve front-end ---
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-// --- Backend routes (from server-simple.js) ---
-// Replace these with your actual server-simple logic if needed
+// --- Backend routes matching Claude front-end ---
+// Replace these with real logic if Claude provided any
 
-// Example: create account
-app.post('/api/create-account', (req, res) => {
+// Create account
+app.post('/create-account', (req, res) => {
   const { username, password } = req.body;
-  // TODO: replace with real account creation logic
   console.log('Create account request:', username, password);
+  // TODO: replace with database logic
   res.json({ success: true, message: `Account for ${username} created!` });
 });
 
-// Example: login
-app.post('/api/login', (req, res) => {
+// Login
+app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  // TODO: replace with real login logic
   console.log('Login request:', username, password);
+  // TODO: replace with database check
   res.json({ success: true, message: `Logged in as ${username}` });
 });
 
-// Example: fetch crypto prices
-app.get('/api/prices', (req, res) => {
-  // TODO: replace with real price logic or API calls
+// Get crypto prices
+app.get('/prices', (req, res) => {
+  // TODO: replace with real prices or API calls
   res.json({
     BTC: 28000,
     ETH: 1800,
-    USDT: 1,
+    USDT: 1
   });
 });
 
-// --- SPA fallback for front-end routing ---
+// SPA fallback for front-end routing
 app.get('*', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'public', 'index.html'), (err) => {
     if (err) res.status(500).send(err);
