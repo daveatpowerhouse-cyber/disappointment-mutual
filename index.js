@@ -9,26 +9,38 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json()); // JSON payloads
 app.use(express.urlencoded({ extended: true })); // form-encoded payloads
 
+// --- In-memory storage for testing ---
+const users = {}; // { username: password }
+
 // --- Serve front-end ---
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-// --- Backend routes (covers most Claude front-end paths) ---
+// --- Backend routes (Claude-compatible) ---
 
 // Create account
 app.post(['/create-account', '/api/create-account', '/accounts/new'], (req, res) => {
   const { username, password } = req.body;
-  console.log('Create account request:', username, password);
-
-  // TODO: replace with real database logic
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: 'Username and password required' });
+  }
+  if (users[username]) {
+    return res.status(400).json({ success: false, message: 'Username already exists' });
+  }
+  users[username] = password;
+  console.log('Account created:', username);
   res.json({ success: true, message: `Account for ${username} created!` });
 });
 
 // Login
 app.post(['/login', '/api/login', '/accounts/login'], (req, res) => {
   const { username, password } = req.body;
-  console.log('Login request:', username, password);
-
-  // TODO: replace with real authentication
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: 'Username and password required' });
+  }
+  if (users[username] !== password) {
+    return res.status(401).json({ success: false, message: 'Invalid username or password' });
+  }
+  console.log('Login successful:', username);
   res.json({ success: true, message: `Logged in as ${username}` });
 });
 
