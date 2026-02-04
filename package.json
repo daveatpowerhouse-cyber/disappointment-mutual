@@ -1,15 +1,20 @@
 {
   "name": "disappointment-mutual-exchange",
   "version": "1.0.0",
-  "description": "A simple Node.js app for Railpack",
+  "description": "Fake crypto exchange for testing UI and trading logic",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
-  }
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "author": "Your Name",
+  "license": "MIT"
 }
