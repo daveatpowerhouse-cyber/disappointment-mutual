@@ -2,14 +2,9 @@
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
-import { fileURLToPath } from 'url';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// ---------------- ES MODULE __dirname FIX ----------------
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // ---------------- MIDDLEWARE ----------------
 app.use(cors());
@@ -17,7 +12,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ---------------- STATIC FRONTEND ----------------
-app.use(express.static(path.join(__dirname, 'public')));
+// Use process.cwd() since __dirname doesn't exist in ES modules
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // ---------------- IN-MEMORY DATA ----------------
 const users = {};
@@ -64,7 +60,6 @@ app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const user = users[username];
   if (!user || user.password !== password) return res.status(401).json({ error: 'Invalid credentials' });
-
   res.json({ success: true, user: { username, balance: user.balance } });
 });
 
@@ -75,8 +70,13 @@ app.get('/api/balance', (req, res) => {
   res.json(users[username].balance);
 });
 
-app.get('/api/prices', (req, res) => res.json(prices));
-app.get('/api/orders', (req, res) => res.json({ orders }));
+app.get('/api/prices', (req, res) => {
+  res.json(prices);
+});
+
+app.get('/api/orders', (req, res) => {
+  res.json({ orders });
+});
 
 app.get('/api/orderbook', (req, res) => {
   const { pair } = req.query;
@@ -89,13 +89,25 @@ app.get('/api/orderbook', (req, res) => {
   res.json({ bids, asks });
 });
 
-app.get('/api/trades', (req, res) => res.json({ trades: trades.slice(-50) }));
+app.get('/api/trades', (req, res) => {
+  res.json({ trades: trades.slice(-50) });
+});
 
 app.post('/api/orders', (req, res) => {
   const { username, pair, side, price, amount } = req.body;
   if (!users[username]) return res.status(400).json({ error: 'User not found' });
 
-  const order = { id: Date.now(), username, pair, side, price, amount, status: 'open', created: new Date().toISOString() };
+  const order = {
+    id: Date.now(),
+    username,
+    pair,
+    side,
+    price,
+    amount,
+    status: 'open',
+    created: new Date().toISOString()
+  };
+
   orders.push(order);
   users[username].orders.push(order);
   trades.push({ pair, price, amount, side, time: Date.now() });
@@ -105,8 +117,10 @@ app.post('/api/orders', (req, res) => {
 
 // ---------------- SPA FALLBACK ----------------
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
 // ---------------- START ----------------
-app.listen(PORT, () => console.log(`🚀 Exchange running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Exchange running on port ${PORT}`);
+});
